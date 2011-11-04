@@ -143,26 +143,6 @@ public:
   // copy for updating after iteration
   Cell**        cellsUpdate;   
   
-  //// turns out, editing vector contents within an iteration loop
-  //// is hopelessly inefficient and dangerous...
-  //// gonna try just using the state variables directly in a loop
-  //// can probably do better but oh well
-  /*
-  // empty cells
-  std::vector<Cell*> cellsVoid;    
-  // cells containing water
-  std::vector<Cell*> cellsWet;
-  // cells containing all drug
-  std::vector<Cell*> cellsDrug;
-  // cells containing all excip
-  std::vector<Cell*> cellsEx;
-  // cells in the process of wetting
-  std::vector<Cell*> cellsDissDrug;
-  std::vector<Cell*> cellsDissEx;
-  // boundary cells
-  std::vector<Cell*> cellsBound;
-*/
-  
   //====== random number stuff
 #if USE_BOOST
   // randomization algorithm

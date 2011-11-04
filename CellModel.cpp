@@ -62,13 +62,6 @@ void CellModel::findNeighbors(Cell* cell) {
 #if DIAG_NEIGHBORS
     
 #else
-    /// DEBUG
-    if (cell->idx == 97) {
-      int dum=0;
-      dum++;
-    }
-    /////
-    
     cell->neighborIdx[0] = subToIdx(x+1,  y,    z);
     cell->neighborIdx[1] = subToIdx(x-1,  y,    z);
     cell->neighborIdx[2] = subToIdx(x,    y+1,  z);
@@ -151,7 +144,6 @@ void CellModel::setup(void) {
         || (y > (cubeLength-2))
         || (z > (cubeLength-2)) ) {
       // boundary cells
-//      cellsBound.push_back(cells[i]);
       cells[i]->state = eStateBound;
       cells[i]->concentration[0] = 0.f;
       cells[i]->concentration[1] = 0.f;
@@ -163,10 +155,8 @@ void CellModel::setup(void) {
         rnd = getRand();
         if(rnd < pDrug) {
           cells[i]->state = eStateDrug;
-//          cellsDrug.push_back(cells[i]);
         } else if (rnd < (pDrug + pEx)) {
           cells[i]->state = eStateEx;
-  //        cellsEx.push_back(cells[i]);
         } else if (rnd < (pDrug + pEx + pPoly)) {
           cells[i]->state = eStatePoly;
       	} 
@@ -175,7 +165,6 @@ void CellModel::setup(void) {
         cells[i]->state = eStateWet;
         cells[i]->concentration[0] = 0.f;
         cells[i]->concentration[1] = 0.f;
-//        cellsWet.push_back(cells[i]);
       }
     }
   }
@@ -185,7 +174,7 @@ void CellModel::setup(void) {
     *(cellsUpdate[i]) = *(cells[i]);
   }
   
-  // TODO: compression!
+  // TODO: tablet compression
 }
 
 //------- dissolve
@@ -206,9 +195,6 @@ eCellState CellModel::dissolve(const Cell* const cell) {
   // compare dry-neighbor states with this cell's state
   for(u8 i = 0; i < NUM_NEIGHBORS; i++) {
     if (cells[cell->neighborIdx[i]]->state == cell->state) {
-      ///// DEBUG
-      assert(cell->state < 2);
-      /////
       sumC += cells[cell->neighborIdx[i]]->concentration[cell->state];
     }
   }      
@@ -231,9 +217,6 @@ eCellState CellModel::dissolve(const Cell* const cell) {
 eCellState CellModel::continueDissolve(const Cell* const cell) {
   cellsUpdate[cell->idx]->dissCount++;
   // FIXME: (?) careful, this concentration index is a nasty enum hack
-  ///// DEBUG
-  assert((cell->state == 2) || (cell->state == 3));
-  /////
   cellsUpdate[cell->idx]->concentration[cell->state - 2] += DISS_INC;
   if(cellsUpdate[cell->idx]->dissCount == DISS_STEPS) {
     cellsUpdate[cell->idx]->state = eStateWet;
@@ -308,58 +291,7 @@ void CellModel::iterate(void) {
         break;
     }
   }
-  
-  /*
-  // boundary cells reset concentrations to zero 
-  for (std::vector<Cell*>::iterator cell = cellsBound.begin(); cell != cellsBound.end(); cell++) {
-    (*cell)->concentration[0] = 0.f;
-    (*cell)->concentration[1] = 0.f;
-  }
-  
-  // dissolve drug cells
-  for (std::vector<Cell*>::iterator cell = cellsDrug.begin(); cell != cellsDrug.end(); cell++) {
     
-    newState = dissolve(*cell);
-    if(newState == eStateDissDrug) {
-      cellsDrug.erase(cell);
-      cellsDissDrug.push_back(*cell);
-    }
-  }
-  
-  // dissolve excipient cells
-  for (std::vector<Cell*>::iterator cell = cellsEx.begin(); cell != cellsEx.end(); cell++) {
-    newState = dissolve(*cell);
-    if(newState == eStateDissEx) {
-      cellsEx.erase(cell);
-      cellsDissEx.push_back(*cell);
-    }
-  }
-  
-  
-  // continue dissolving drug
-  for (std::vector<Cell*>::iterator cell = cellsDissDrug.begin(); cell != cellsDissDrug.end(); cell++) {
-    newState = continueDissolve(*cell);
-    if(newState == eStateWet) {
-      cellsDissDrug.erase(cell);
-      cellsWet.push_back(*cell);
-    }
-  }
-  
-  // continue dissolving excipient
-  for (std::vector<Cell*>::iterator cell = cellsDissEx.begin(); cell != cellsDissEx.end(); cell++) {
-    newState = continueDissolve(*cell);
-    if(newState == eStateWet) {
-      cellsDissEx.erase(cell);
-      cellsWet.push_back(*cell);
-    }
-  }
-  
-  // diffuse wet cells
-  for (std::vector<Cell*>::iterator cell = cellsWet.begin(); cell != cellsWet.end(); cell++) {
-    diffuse(*cell);
-  }
-  */
-  
   ///// TODO: join udpate threads here
   
   // update the cell data
