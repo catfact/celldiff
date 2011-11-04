@@ -6,12 +6,11 @@
  *
  */
 
-//#include <iostream>
 #include <cstdio>
 #include "CellModel.hpp"
 
 // cube width
-static const u64 n=8;
+static const u64 n=16;
 
 static void printState(CellModel* model)
 {
@@ -32,11 +31,11 @@ int main (const int argc, const char** argv)
 {
   CellModel model(
 		  n,      // cube width
-		  0.2,    // p drug
-		  0.4,    // p excipient
-		  0.4,    // p polymer
-		  0.001,  // cell size
-		  0.001,  // time step
+		  0.35,    // p drug
+		  0.35,    // p excipient
+		  0.3,    // p polymer
+		  0.0001,  // cell size
+		  4.7619047619047628e-09,  // time step : (cell size ** 2) /(6 * pDrug )
 		  7e-6,   // drug diffusion constant
 		  7e-6,   // excipient diffusion constant
 		  47u     // RNG seed

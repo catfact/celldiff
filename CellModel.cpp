@@ -5,10 +5,7 @@
  *  Created by Ezra Buchla on 10/6/11.
  */
 
-#if USE_BOOST
 #include <boost/thread.hpp>
-#endif
-
 #include <cstdio>
 #include <cassert>
 #include "CellModel.hpp"
@@ -60,7 +57,7 @@ void CellModel::findNeighbors(Cell* cell) {
     }
   } else { 
 #if DIAG_NEIGHBORS
-    
+    // TODO (?)
 #else
     cell->neighborIdx[0] = subToIdx(x+1,  y,    z);
     cell->neighborIdx[1] = subToIdx(x-1,  y,    z);
@@ -84,9 +81,8 @@ CellModel::CellModel(
                      f32 dex,
                      u32 seed
 ) :
-#if USE_BOOST
-rngEngine(), rngDist(0.f, 1.f),
-#endif
+rngEngine(),
+rngDist(0.f, 1.f),
 cubeLength(n),
 pDrug(pdrug),
 pEx(pex),
@@ -107,10 +103,10 @@ dEx(dex)
     cellsUpdate[i] = new Cell(i);
   }
   // seed the random number engine
-#if USE_BOOST
+
   rngEngine.seed(seed);
   rngGen = new boost::variate_generator<rng_t, dist_t> (rngEngine, rngDist);
-#endif
+
 }
 
 //------ d-tor
@@ -136,7 +132,6 @@ void CellModel::setup(void) {
   
   for (u64 i=0; i<numCells; i++) {
     idxToSub(i, &x, &y, &z);
-    //    printf("%d, %d, %d, %d\n", i, x, y, z);
     if ((x < 1) 
         || (y < 1) 
         || (z < 1)
@@ -174,7 +169,7 @@ void CellModel::setup(void) {
     *(cellsUpdate[i]) = *(cells[i]);
   }
   
-  // TODO: tablet compression
+  // TODO: compression!
 }
 
 //------- dissolve
@@ -291,7 +286,7 @@ void CellModel::iterate(void) {
         break;
     }
   }
-    
+  
   ///// TODO: join udpate threads here
   
   // update the cell data
@@ -304,9 +299,5 @@ void CellModel::iterate(void) {
 
 /// random number generation
 f32 CellModel::getRand(void) {
-#if USE_BOOST
   return (*rngGen)(); 
-#else
-  return (float)rand() / (float)RAND_MAX;
-#endif
 }

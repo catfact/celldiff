@@ -9,22 +9,11 @@
 #ifndef _CELLDIFF_CELLMODEL_H
 #define _CELLDIFF_CELLMODEL_H_
 
-#define USE_BOOST 0
-
-
-
-#if USE_BOOST
 #include <boost/random/mersenne_twister.hpp>
-#include <boost/random/linear_congruential.hpp>
-#include <boost/random/uniform_int.hpp>
+//#include <boost/random/linear_congruential.hpp> // faster RNG algorithm
 #include <boost/random/uniform_real.hpp>
 #include <boost/random/variate_generator.hpp>
-#else
-#include <cstdlib>
-#endif
-
 #include <vector>
-// #include <random>
 #include "types.h"
 
 //======= defines
@@ -143,8 +132,7 @@ public:
   // copy for updating after iteration
   Cell**        cellsUpdate;   
   
-  //====== random number stuff
-#if USE_BOOST
+  /////// boost RNG stuff
   // randomization algorithm
   typedef boost::mt19937 rng_t; // mersenne twister
   // distribution (maps algorithm to data type and range)
@@ -153,7 +141,6 @@ public:
   dist_t  rngDist;
   // generator (functor) for streams of values
   boost::variate_generator<rng_t, dist_t>* rngGen;
-#endif
 };
 
 #endif // header guard
