@@ -194,7 +194,7 @@ eCellState CellModel::dissolve(const Cell* const cell) {
   f32 sumC = 0.f; // sum of neighbor concentrations
   
   for(u8 i = 0; i < NUM_NEIGHBORS; i++) {
-    if (cells[cell->neighborIdx[i]]->state == eStateWet) {
+    if ((cells[cell->neighborIdx[i]]->state == eStateWet) || (cells[cell->neighborIdx[i]]->state == eStateBound)) {
       nw++;
     }
   }
@@ -248,7 +248,7 @@ void CellModel::diffuse(const Cell* const cell) {
   u8 nw = 0;
   
   for(u8 i=0; i<NUM_NEIGHBORS; i++) {
-    if (cells[cell->neighborIdx[i]]->state == eStateWet) {
+    if ((cells[cell->neighborIdx[i]]->state == eStateWet) || (cells[cell->neighborIdx[i]]->state == eStateBound)) {
       nw++;
       cMeanDrug += cells[cell->neighborIdx[i]]->concentration[eStateDrug];
       cMeanEx += cells[cell->neighborIdx[i]]->concentration[eStateEx];

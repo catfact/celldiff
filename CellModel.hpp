@@ -55,14 +55,14 @@
 //======= types
 // enumeration of cell states
 enum eCellState {
-	eStateDrug	= 0,    // DON'T CHANGE THESE FIRST FOUR VALUES (stupid hack reasons)
-	eStateEx		= 1,
-  eStateDissDrug = 2,   // dissolving drug
-  eStateDissEx = 3,   // dissolving excipient
-	eStateWet	= 4,
-	eStatePoly	= 5,
-	eStateVoid	= 6,
-  eStateBound = 7
+	eStateDrug      = 0,    // DON'T CHANGE THESE FIRST FOUR VALUES (stupid hack reasons)
+	eStateEx        = 1,
+  eStateDissDrug  = 2,   // dissolving drug
+  eStateDissEx    = 3,   // dissolving excipient
+	eStateWet       = 4,
+	eStatePoly      = 5,
+	eStateVoid      = 6,
+  eStateBound     = 7
 };
 
 //======= classes
