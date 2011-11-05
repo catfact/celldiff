@@ -7,10 +7,16 @@
  */
 
 #include <cstdio>
+#include <boost/program_options.hpp>
 #include "CellModel.hpp"
 
-// cube width
-static const u64 n=16;
+namespace po = boost::program_options;
+
+static po::options_description poDesc("allowed options");
+poDesc.add_options()
+(
+
+static u64 n = 16;
 
 static void printState(CellModel* model)
 {
@@ -29,6 +35,9 @@ static void printState(CellModel* model)
 
 int main (const int argc, const char** argv)
 {
+  
+  
+  
   CellModel model(
 		  n,      // cube width
 		  0.35,    // p drug
