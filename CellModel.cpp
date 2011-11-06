@@ -5,7 +5,10 @@
  *  Created by Ezra Buchla on 10/6/11.
  */
 
+#if USE_BOOST
 #include <boost/thread.hpp>
+#endif
+
 #include <cstdio>
 #include <cassert>
 #include "CellModel.hpp"
@@ -57,7 +60,7 @@ void CellModel::findNeighbors(Cell* cell) {
     }
   } else { 
 #if DIAG_NEIGHBORS
-    // TODO (?)
+    
 #else
     cell->neighborIdx[0] = subToIdx(x+1,  y,    z);
     cell->neighborIdx[1] = subToIdx(x-1,  y,    z);
@@ -81,8 +84,9 @@ CellModel::CellModel(
                      f32 dex,
                      u32 seed
 ) :
-rngEngine(),
-rngDist(0.f, 1.f),
+#if USE_BOOST
+rngEngine(), rngDist(0.f, 1.f),
+#endif
 cubeLength(n),
 pDrug(pdrug),
 pEx(pex),
@@ -90,7 +94,9 @@ pPoly(ppoly),
 cellLength(cl),
 dt(dT),
 dDrug(ddrug),
-dEx(dex)
+dEx(dex),
+drugMassTotal(0.f),
+drugMass(0.f)
 {
   cubeLength2 = cubeLength * cubeLength;
   numCells = cubeLength * cubeLength * cubeLength;
@@ -103,10 +109,10 @@ dEx(dex)
     cellsUpdate[i] = new Cell(i);
   }
   // seed the random number engine
-
+#if USE_BOOST
   rngEngine.seed(seed);
   rngGen = new boost::variate_generator<rng_t, dist_t> (rngEngine, rngDist);
-
+#endif
 }
 
 //------ d-tor
@@ -125,13 +131,19 @@ CellModel::~CellModel() {
 //------- set up tablet shape
 void CellModel::setup(void) {
   u64 x, y, z;
-  u64 cX = cubeLength / 2;
-  u64 cY = cX;
+  u64 cX;
+  u64 cY;
   u64 r2;
   f32 rnd;
+  u64 cubeR2;
+  
+	cX = cubeLength >> 1;
+	cY = cX;
+  cubeR2 = cX * cX;
   
   for (u64 i=0; i<numCells; i++) {
     idxToSub(i, &x, &y, &z);
+    //    printf("%d, %d, %d, %d\n", i, x, y, z);
     if ((x < 1) 
         || (y < 1) 
         || (z < 1)
@@ -145,11 +157,12 @@ void CellModel::setup(void) {
     }
     else {
       r2 = (x-cX)*(x-cX) + (y-cY)*(y-cY);
-      if(r2 < (cubeLength * cubeLength)) {
+      if(r2 < cubeR2) {
         
         rnd = getRand();
         if(rnd < pDrug) {
           cells[i]->state = eStateDrug;
+          drugMassTotal += 1.f;
         } else if (rnd < (pDrug + pEx)) {
           cells[i]->state = eStateEx;
         } else if (rnd < (pDrug + pEx + pPoly)) {
@@ -157,7 +170,7 @@ void CellModel::setup(void) {
       	} 
         
       } else {
-        cells[i]->state = eStateWet;
+        cells[i]->state = eStateBound;
         cells[i]->concentration[0] = 0.f;
         cells[i]->concentration[1] = 0.f;
       }
@@ -169,7 +182,9 @@ void CellModel::setup(void) {
     *(cellsUpdate[i]) = *(cells[i]);
   }
   
-  // TODO: compression!
+  // TODO: tablet compression
+  
+  drugMass = drugMassTotal;
 }
 
 //------- dissolve
@@ -246,18 +261,18 @@ void CellModel::diffuse(const Cell* const cell) {
    + (dEx * nw / cellLength2 * (cMeanEx - cell->concentration[eStateEx]) * dt);
    */ // refactored:
   
-  f32 tmp = nw * dt_l2;
+  const f32 tmp = nw * dt_l2;
+  const f32 drugDiff = (dDrug * tmp * (cMeanDrug - cell->concentration[eStateDrug]));
+ drugMass += drugDiff;
   
-  cellsUpdate[cell->idx]->concentration[eStateDrug] = cell->concentration[eStateDrug]
-  + (dDrug * tmp * (cMeanDrug - cell->concentration[eStateDrug]));
+  cellsUpdate[cell->idx]->concentration[eStateDrug] = cell->concentration[eStateDrug] + drugDiff;
   
   cellsUpdate[cell->idx]->concentration[eStateEx] = cell->concentration[eStateEx]
   + (dEx * tmp * (cMeanEx - cell->concentration[eStateEx]));
 }
 
-
 //---------- iterate!!
-void CellModel::iterate(void) {
+f32 CellModel::iterate(void) {
   eCellState newState;
   
   /////// TODO: incorporate threading engine. debugging single-threaded version first...
@@ -286,7 +301,7 @@ void CellModel::iterate(void) {
         break;
     }
   }
-  
+    
   ///// TODO: join udpate threads here
   
   // update the cell data
@@ -295,9 +310,14 @@ void CellModel::iterate(void) {
   }
   
   ///// TODO: join copy threads here
+  return (drugMassTotal - drugMass) / drugMassTotal;
 }
 
 /// random number generation
 f32 CellModel::getRand(void) {
+#if USE_BOOST
   return (*rngGen)(); 
+#else
+  return (float)rand() / (float)RAND_MAX;
+#endif
 }

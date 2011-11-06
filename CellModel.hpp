@@ -9,11 +9,20 @@
 #ifndef _CELLDIFF_CELLMODEL_H
 #define _CELLDIFF_CELLMODEL_H_
 
+#define USE_BOOST 0
+
+#if USE_BOOST
 #include <boost/random/mersenne_twister.hpp>
-//#include <boost/random/linear_congruential.hpp> // faster RNG algorithm
+#include <boost/random/linear_congruential.hpp>
+#include <boost/random/uniform_int.hpp>
 #include <boost/random/uniform_real.hpp>
 #include <boost/random/variate_generator.hpp>
+#else
+#include <cstdlib>
+#endif
+
 #include <vector>
+// #include <random>
 #include "types.h"
 
 //======= defines
@@ -89,7 +98,7 @@ public:
   // set initial values, tablet shape, etc
   void setup(void);
   // advance time in the model by one step
-  void iterate(void);
+  f32 iterate(void);
 private:
   // populate neighbor index array for a given cell
   void findNeighbors(Cell* cell);
@@ -104,7 +113,7 @@ private:
   void idxToSub(u64 idx, u64* pX, u64* pY, u64* pZ);
   // random number generation
   f32 getRand(void);
-public:
+public: // FIXME: some of these could be privatized
   // cell type distribution
   f32 pDrug;
   f32 pEx;
@@ -121,10 +130,10 @@ public:
   u64 cubeLength2;
   // number of total cells
   u64 numCells;
-
-  // FIXME... i guess  
-//private:
-
+  // initial total mass of drug
+  f32 drugMassTotal;
+  // current mass of drug, including diffused concentrations
+  f32 drugMass;
   // a common intermediate multiplier
   f32 dt_l2;
   // flattened array of cells
@@ -132,7 +141,8 @@ public:
   // copy for updating after iteration
   Cell**        cellsUpdate;   
   
-  /////// boost RNG stuff
+  //====== random number stuff
+#if USE_BOOST
   // randomization algorithm
   typedef boost::mt19937 rng_t; // mersenne twister
   // distribution (maps algorithm to data type and range)
@@ -141,6 +151,7 @@ public:
   dist_t  rngDist;
   // generator (functor) for streams of values
   boost::variate_generator<rng_t, dist_t>* rngGen;
+#endif
 };
 
 #endif // header guard
