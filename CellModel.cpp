@@ -332,7 +332,7 @@ void CellModel::calcDrugMass(void) {
         drugMass += (1.f - (DISS_INC * cells[i]->dissCount) + cells[i]->concentration[eStateDrug]);
         break;
       case eStateWet:
-        drugMass += cells[i]->concentration[eStateDrug);
+        drugMass += cells[i]->concentration[eStateDrug];
         break;
       default:
         break;

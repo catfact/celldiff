@@ -37,11 +37,25 @@ int main (const int argc, const char** argv) {
   f32 pd, pe, pp;
   f32 releaseRatio;  
   
+  //////// ncurses stuff
+  initscr();
+  raw();
+  noecho();
+
+
+  
+//////// ncurses stuff
+  
+  initscr();
+  
+  raw();
+  noecho();
+
+mvprintw(4, 0, "celldiff n count pDrug pExcip pPoly frameInterval frameSlice");
   ////// parse arguments
   // max iterations count
   if (argc < 2) {
-    count =  1000;
-    mvprintw(0, 0, "(usage: celldiff count n pDrug pExcipient pPolymer frameInterval frameSlice) \n\n");
+    count =  100;
   } else {
     count = (u64)atoi(argv[1]);
   }
@@ -76,7 +90,7 @@ int main (const int argc, const char** argv) {
 
 // animation frame interval
   if (argc < 7) {
-    frameCount = 20;
+    frameCount = 1;
   } else {
     frameCount = (u32)atoi(argv[6]);
   }
@@ -88,12 +102,6 @@ int main (const int argc, const char** argv) {
     frameNum = (u32)atoi(argv[7]);
   }
 
-//////// ncurses stuff
-  
-  initscr();
-  
-  raw();
-  noecho();
 
 if(has_colors() == FALSE) {
    endwin();
@@ -131,6 +139,9 @@ if(has_colors() == FALSE) {
   model.setup();
 
 
+
+    mvprintw(4, 0, "(usage: celldiff count n pDrug pExcip pPoly frameInt frameSlice) \n\n");
+
   mvprintw(1, 0, "performing %d iterations on %d cells. press any key to continue...\n\n", count, n*n*n);
   refresh();
 	getchar();
@@ -156,7 +167,7 @@ if(has_colors() == FALSE) {
   }
   printFrame(&model, frameNum); 
  	
-    mvprintw(1, 0, "finished simulation. press any key to quit...                      ");
+    mvprintw(2, 0, "finished simulation. press any key to quit...                                                ");
     refresh();
  	getchar(); 
   endwin();
