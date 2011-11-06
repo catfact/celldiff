@@ -263,7 +263,7 @@ void CellModel::diffuse(const Cell* const cell) {
   
   const f32 tmp = nw * dt_l2;
   const f32 drugDiff = (dDrug * tmp * (cMeanDrug - cell->concentration[eStateDrug]));
- drugMass += drugDiff;
+// drugMass += drugDiff;
   
   cellsUpdate[cell->idx]->concentration[eStateDrug] = cell->concentration[eStateDrug] + drugDiff;
   
@@ -310,7 +310,34 @@ f32 CellModel::iterate(void) {
   }
   
   ///// TODO: join copy threads here
+ 
+  calcDrugMass();
   return (drugMassTotal - drugMass) / drugMassTotal;
+}
+
+void CellModel::calcDrugMass(void) {
+// calculate current drug mass
+// FIXME: this is the slow way to do it.
+// better to update during the diffusion step.
+// tryingfor accuracy first.
+
+	drugMass = 0.f;
+	 
+  for (u64 i=0; i<numCells; i++) {
+    switch(cells[i]->state) {
+      case eStateDrug:
+      drugMass += 1.f;
+        break;
+      case eStateDissDrug:
+        drugMass += (1.f - (DISS_INC * cells[i]->dissCount) + cells[i]->concentration[eStateDrug]);
+        break;
+      case eStateWet:
+        drugMass += cells[i]->concentration[eStateDrug);
+        break;
+      default:
+        break;
+    }
+  }
 }
 
 /// random number generation

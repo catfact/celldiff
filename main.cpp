@@ -156,7 +156,7 @@ if(has_colors() == FALSE) {
   }
   printFrame(&model, frameNum); 
  	
-    mvprintw(1, 0, "finished simulation. press any key to quit...");
+    mvprintw(1, 0, "finished simulation. press any key to quit...                      ");
     refresh();
  	getchar(); 
   endwin();

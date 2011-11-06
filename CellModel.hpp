@@ -108,6 +108,9 @@ private:
   eCellState continueDissolve(const Cell* const cell);
   // calculate diffusion on this cell
   void diffuse(const Cell* const cell);
+  // calculate the current mass of drug remaining 
+  // FIXME: this is rather inefficient
+  voidd calcDrugMass(void);
   // index / coordinates conversion
   u64 subToIdx(const u64 x, const u64 y, const u64 z);
   void idxToSub(u64 idx, u64* pX, u64* pY, u64* pZ);
