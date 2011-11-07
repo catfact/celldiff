@@ -145,7 +145,7 @@ void CellModel::setup(void) {
 	
 	cX = cubeLength >> 1;
 	cY = cX;
-	cubeR2 = cX * cX;
+	cubeR2 = (cX-1) * (cX-1);
 	eCellState swapstate;
 	
 	// offset coordinates to get diagonals in 2x2x2
@@ -180,7 +180,7 @@ void CellModel::setup(void) {
 					}
 				} // end edge branch
 				else {
-					r2 = (i-cX)*(i-cX) + (j-cY)*(j-cY);
+					r2 = (i-cX+1)*(i-cX+1) + (j-cY+1)*(j-cY+1);
 					// TODO: check cylinder height
 					if(r2 < cubeR2) {
 						
@@ -279,32 +279,50 @@ void CellModel::setup(void) {
 			for(u32 k=0; k<cubeLength; k += 2) {
 				idx = subToIdx(i, j, k);
 				if( (cells[idx]->state == eStatePoly) ) {
-					f32 r; 
-					for(diag = 0; diag<4; diag++) {
-						nIdx = subToIdx(i+diags[diag][0], j+diags[diag][1], k+diags[diag][2]);
-						// which neighbor to swap this diag [0, 5]
+					u32 nIdxBase[3] = {i, j, k};
+					// while (cells[subToIdx(nIdxBase[0], nIdxBase[1], nIdxBase[2])]->state == eStatePoly) {
 						switch((u8) (getRand() * 5.5f)) {
 							case 0:
-								nIdx2 = subToIdx(i+2+diagsNot[diag][0], j+2+diagsNot[diag][1], k+diagsNot[diag][2]);
+								nIdxBase[0] = i+2;
+								nIdxBase[1] = j;
+								nIdxBase[2] = k;
 								break;
 							case 1:
-								nIdx2 = subToIdx(i-2+diagsNot[diag][0], j-2+diagsNot[diag][1], k+diagsNot[diag][2]);
+								nIdxBase[0] = i-2;
+								nIdxBase[1] = j;
+								nIdxBase[2] = k;
 								break;
 							case 2:
-								nIdx2 = subToIdx(i+diagsNot[diag][0], j+diagsNot[diag][1], k+diagsNot[diag][2]);
+								nIdxBase[0] = i;
+								nIdxBase[1] = j+2;
+								nIdxBase[2] = k;
 								break;
 							case 3:
-								nIdx2 = subToIdx(i+diagsNot[diag][0], j+diagsNot[diag][1], k+diagsNot[diag][2]);
+								nIdxBase[0] = i;
+								nIdxBase[1] = j-2;
+								nIdxBase[2] = k;
 								break;
 							case 4:
-								nIdx2 = subToIdx(i+diagsNot[diag][0], j+diagsNot[diag][1], k+2+diagsNot[diag][2]);
+								nIdxBase[0] = i;
+								nIdxBase[1] = j;
+								nIdxBase[2] = k+2;
 								break;
 							case 5:
-								nIdx2 = subToIdx(i+diagsNot[diag][0], j+diagsNot[diag][1], k+2+diagsNot[diag][2]);
+								nIdxBase[0] = i;
+								nIdxBase[1] = j;
+								nIdxBase[2] = k-2;
 								break;
 							default:
+								nIdxBase[0] = i;
+								nIdxBase[1] = j;
+								nIdxBase[2] = k;
 								break;
-						}
+						}	
+				//	}
+					
+					for(diag = 0; diag<4; diag++) {
+						nIdx = subToIdx(i+diags[diag][0], j+diags[diag][1], k+diags[diag][2]);
+						nIdx2 = subToIdx(nIdxBase[0]+diagsNot[diag][0], nIdxBase[1]+diagsNot[diag][1], nIdxBase[2]+diagsNot[diag][2]);
 						swapstate = cells[nIdx2]->state;
 						if (swapstate != eStateBound) {
 							cells[nIdx2]->state = cells[nIdx]->state;
