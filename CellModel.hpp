@@ -55,105 +55,109 @@
 enum eCellState {
 	eStateDrug      = 0,    // DON'T CHANGE THESE FIRST FOUR VALUES (stupid hack reasons)
 	eStateEx        = 1,
-  eStateDissDrug  = 2,   // dissolving drug
-  eStateDissEx    = 3,   // dissolving excipient
+	eStateDissDrug  = 2,   // dissolving drug
+	eStateDissEx    = 3,   // dissolving excipient
 	eStateWet       = 4,
 	eStatePoly      = 5,
 	eStateVoid      = 6,
-  eStateBound     = 7
+	eStateBound     = 7
 };
 
 //======= classes
 class Cell {
 public:
-  // c-tor
-  Cell(u64 idx); 
-  // d-tor
-  ~Cell();
+	// c-tor
+	Cell(u32 idx); 
+	// d-tor
+	~Cell();
 public:
-  // state
-  eCellState  state; 
-  // index
-  u64         idx;
-  // array of neighbor indices
-  u64   neighborIdx[NUM_NEIGHBORS];
-  // concentration of drug, excipient
-  f32 concentration[2];
-  // counter for gradual dissolution
-  u16     dissCount;
+	// state
+	eCellState  state; 
+	// index
+	u32         idx;
+	// array of neighbor indices
+	u32   neighborIdx[NUM_NEIGHBORS];
+	// concentration of drug, excipient
+	f32 concentration[2];
+	// counter for gradual dissolution
+	u16     dissCount;
 };
 
 class CellModel {
 public:
-  CellModel(u64 n,
-	    f32 pDrug,
-	    f32 pEx,
-	    f32 pPoly,
-	    f32 cellW,
-	    f32 dT,
-	    f32 ddrug=7e-6,
-	    f32 dex=7e-6,
-	    u32 seed=47u);
-  ~CellModel(void);
-  // set initial values, tablet shape, etc
-  void setup(void);
-  // advance time in the model by one step
-  f32 iterate(void);
+	CellModel(u32 n,
+			  f32 pDrug,
+			  f32 pEx,
+			  f32 pPoly,
+			  f32 cellW,
+			  f32 dT,
+			  f32 ddrug=7e-6,
+			  f32 dex=7e-6,
+			  u32 seed=47u);
+	~CellModel(void);
+	// set initial values, tablet shape, etc
+	void setup(void);
+	// advance time in the model by one step
+	f32 iterate(void);
 private:
-  // populate neighbor index array for a given cell
-  void findNeighbors(Cell* cell);
-  // decide whether to dissolve given cell; return new state
-  eCellState dissolve(const Cell* const cell);
-  // continue dissolving this cell; return new states
-  eCellState continueDissolve(const Cell* const cell);
-  // calculate diffusion on this cell
-  void diffuse(const Cell* const cell);
-  // calculate the current mass of drug remaining 
-  // FIXME: this is rather inefficient
-  void calcDrugMass(void);
-  // index / coordinates conversion
-  u64 subToIdx(const u64 x, const u64 y, const u64 z);
-  void idxToSub(u64 idx, u64* pX, u64* pY, u64* pZ);
-  // random number generation
-  f32 getRand(void);
-public: // FIXME: some of these could be privatized
-  // cell type distribution
-  f32 pDrug;
-  f32 pEx;
-  f32 pPoly;
-  // diffusion constants
-  f32 dDrug;
-  f32 dEx;
-  // time to diffuse length of cell
-  f32 dt;
-  // length of cell
-  f32 cellLength;
-  // number of cells on each side of space
-  u64 cubeLength;
-  u64 cubeLength2;
-  // number of total cells
-  u64 numCells;
-  // initial total mass of drug
-  f32 drugMassTotal;
-  // current mass of drug, including diffused concentrations
-  f32 drugMass;
-  // a common intermediate multiplier
-  f32 dt_l2;
-  // flattened array of cells
-  Cell**        cells;         
-  // copy for updating after iteration
-  Cell**        cellsUpdate;   
-  
-  //====== random number stuff
+	// populate neighbor index array for a given cell
+	void findNeighbors(Cell* cell);
+	// decide whether to dissolve given cell; return new state
+	eCellState dissolve(const Cell* const cell);
+	// continue dissolving this cell; return new states
+	eCellState continueDissolve(const Cell* const cell);
+	// calculate diffusion on this cell
+	void diffuse(const Cell* const cell);
+	// calculate the current mass of drug remaining 
+	// FIXME: this is rather inefficient
+	void calcDrugMass(void);
+	// index / coordinates conversion
+	u32 subToIdx(const u32 x, const u32 y, const u32 z);
+	void idxToSub(u32 idx, u32* pX, u32* pY, u32* pZ);
+	// random number generation
+	f32 getRand(void);
+	
+public: // FIXME: many of these could be privatized
+	// cell type distribution
+	f32 pDrug;
+	f32 pEx;
+	f32 pPoly;
+	// diffusion constants
+	f32 dDrug;
+	f32 dEx;
+	// time to diffuse length of cell
+	f32 dt;
+	// length of cell
+	f32 cellLength;
+	// number of cells on each side of space
+	u32 cubeLength;
+	u32 cubeLength2;
+	// number of total cells
+	u32 numCells;
+	// initial total mass of drug
+	f32 drugMassTotal;
+	// current mass of drug, including diffused concentrations
+	f32 drugMass;
+	// a common intermediate multiplier
+	f32 dt_l2;
+	// flattened array of all cells
+	Cell**        cells;         
+	// copy for updating after iteration
+	Cell**        cellsUpdate;
+	// cells-to-process (drug, excip, water, diffusing, or immediate boundary) 
+	u32* cellsToProcess;
+	u32 numCellsToProcess;
+	
+	//====== random number stuff
 #if USE_BOOST
-  // randomization algorithm
-  typedef boost::mt19937 rng_t; // mersenne twister
-  // distribution (maps algorithm to data type and range)
-  typedef boost::uniform_real<f32> dist_t;
-  rng_t   rngEngine;
-  dist_t  rngDist;
-  // generator (functor) for streams of values
-  boost::variate_generator<rng_t, dist_t>* rngGen;
+	// randomization algorithm
+	typedef boost::mt19937 rng_t; // mersenne twister
+	// distribution (maps algorithm to data type and range)
+	typedef boost::uniform_real<f32> dist_t;
+	rng_t   rngEngine;
+	dist_t  rngDist;
+	// generator (functor) for streams of values
+	boost::variate_generator<rng_t, dist_t>* rngGen;
 #endif
 };
 
