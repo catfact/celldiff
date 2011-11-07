@@ -146,6 +146,7 @@ void CellModel::setup(void) {
 	cX = cubeLength >> 1;
 	cY = cX;
 	cubeR2 = cX * cX;
+	eCellState swapstate;
 	
 	// offset coordinates to get diagonals in 2x2x2
 	const u8 diags[4][3]	= { {0, 0, 0}, {0, 1, 1}, {1, 0, 1}, {1, 1, 0} };
@@ -239,6 +240,7 @@ void CellModel::setup(void) {
 		} // end j loop
 	} // end i loop
 	
+	/*
 	/// 2nd loop: find sandwiched dry cells, move polymer
 	for(u32 i=0; i<cubeLength; i += 2) {
 		for(u32 j=0; j<cubeLength; j += 2) {
@@ -270,6 +272,51 @@ void CellModel::setup(void) {
 			}
 		}
 	}
+	 */
+	/// 2nd loop: each polymer 2x2x2 randomly swaps diagonal complements with neighbors
+	for(u32 i=0; i<cubeLength; i += 2) {
+		for(u32 j=0; j<cubeLength; j += 2) {
+			for(u32 k=0; k<cubeLength; k += 2) {
+				idx = subToIdx(i, j, k);
+				if( (cells[idx]->state == eStatePoly) ) {
+					f32 r; 
+					for(diag = 0; diag<4; diag++) {
+						nIdx = subToIdx(i+diags[diag][0], j+diags[diag][1], k+diags[diag][2]);
+						// which neighbor to swap this diag [0, 5]
+						switch((u8) (getRand() * 5.5f)) {
+							case 0:
+								nIdx2 = subToIdx(i+2+diagsNot[diag][0], j+2+diagsNot[diag][1], k+diagsNot[diag][2]);
+								break;
+							case 1:
+								nIdx2 = subToIdx(i-2+diagsNot[diag][0], j-2+diagsNot[diag][1], k+diagsNot[diag][2]);
+								break;
+							case 2:
+								nIdx2 = subToIdx(i+diagsNot[diag][0], j+diagsNot[diag][1], k+diagsNot[diag][2]);
+								break;
+							case 3:
+								nIdx2 = subToIdx(i+diagsNot[diag][0], j+diagsNot[diag][1], k+diagsNot[diag][2]);
+								break;
+							case 4:
+								nIdx2 = subToIdx(i+diagsNot[diag][0], j+diagsNot[diag][1], k+2+diagsNot[diag][2]);
+								break;
+							case 5:
+								nIdx2 = subToIdx(i+diagsNot[diag][0], j+diagsNot[diag][1], k+2+diagsNot[diag][2]);
+								break;
+							default:
+								break;
+						}
+						swapstate = cells[nIdx2]->state;
+						if (swapstate != eStateBound) {
+							cells[nIdx2]->state = cells[nIdx]->state;
+							cells[nIdx]->state = swapstate;
+						}
+					}
+					
+				}
+			}
+		}
+	}
+	
 	
 	/// 3rd loop: find cells to process
 	u8 tmp;

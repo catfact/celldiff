@@ -171,18 +171,23 @@ int main (const int argc, const char** argv) {
 		step++;
 		frameStep++;
 		if(frameStep == frameCount) {
-// DEBUG, skip
 			printFrame(&model, frameNum);
 			frameStep = 0;
 		}
-		
+			
 		
 		releaseRatio = model.iterate();
 		mvprintw(1, 0, "finished iteration %d of %d, released ratio: %f, intial mass: %f", step, count, releaseRatio, model.drugMassTotal);
+		
+		// ch = getch();
+		// mvprintw(2, 0, "yaahh %c", ch);
+		
 		refresh();
 	}
-	// DEBUG, skip
-	 printFrame(&model, frameNum); 
+	
+	
+	
+	printFrame(&model, frameNum); 
  	
     mvprintw(2, 0, "finished simulation. press any key to quit...                                                ");
     refresh();
