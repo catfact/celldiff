@@ -29,6 +29,16 @@ Cell::~Cell() {
 //================================================================
 // ===== CellModel
 
+//// constant diffusion weights 
+const f32 CellModel::diffNMul[NUM_NEIGHBORS] = {
+  1.f,
+  0.1f,
+  0.01f,
+  0.001f,
+  0.0001f,
+  0.00001f
+};
+
 // index <-> coordinate conversion
 u32 CellModel::subToIdx(const u32 x,
                         const u32 y, 
