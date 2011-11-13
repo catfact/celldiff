@@ -185,9 +185,6 @@ int main (const int argc, const char** argv) {
       releaseRatio = model.iterate();
       mvprintw(1, 0, "finished iteration %d of %d, released ratio: %f, intial mass: %f", step, count, releaseRatio, model.drugMassTotal);
 		
-      // ch = getch();
-      // mvprintw(2, 0, "yaahh %c", ch);
-		
       refresh();
     }
 	

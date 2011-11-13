@@ -29,14 +29,19 @@ Cell::~Cell() {
 //================================================================
 // ===== CellModel
 
-//// constant diffusion weights 
-const f32 CellModel::diffNMul[NUM_NEIGHBORS] = {
+//// constant diffusion multiplier given count of poly neighbors
+const f32 CellModel::diffNMul[7] = {
   1.f,
+  0.9f,
   0.1f,
   0.01f,
   0.001f,
-  0.0001f,
-  0.00001f
+  0.f
+};
+
+//// constant dissolution steps given count of poly neighbors
+const f32 CellModel::dissNSteps[7] = {
+  0, 50, 100, 100, 200, 400, 800
 };
 
 // index <-> coordinate conversion
@@ -191,7 +196,7 @@ void CellModel::setup(void) {
 	} // end edge branch
 	else {
 	  r2 = (i-cX+1)*(i-cX+1) + (j-cY+1)*(j-cY+1);
-	  // TODO: check cylinder height
+	  // TODO!!!  check cylinder height 
 	  if(r2 < cubeR2) {
 						
 	    rnd = getRand();
@@ -374,7 +379,7 @@ void CellModel::setup(void) {
     case eStateVoid:
       cellsToProcess[numCellsToProcess] = cells[i]->idx;
       numCellsToProcess++;
-      //				printf("{ %d, %d } ; ", (int)numCellsToProcess, (int)cells[i]->idx);
+      // printf("{ %d, %d } ; ", (int)numCellsToProcess, (int)cells[i]->idx);
       break;
     case eStateBound:
       // want to process boundary cells only if they adjoin a non-boundary
@@ -386,14 +391,15 @@ void CellModel::setup(void) {
       if(tmp) { 	
 	cellsToProcess[numCellsToProcess] = cells[i]->idx;
 	numCellsToProcess++;
-	//					printf("{ %d, %d } ; ", (int)numCellsToProcess, (int)cells[i]->idx);
+	// printf("{ %d, %d } ; ", (int)numCellsToProcess, (int)cells[i]->idx);
       }
       break;
     default:
       break;
     }
   }
-	
+       
+  // initialize the update data
   for(u32 i=0; i<numCells; i++) {
     *(cellsUpdate[i]) = *(cells[i]);
   }
@@ -403,6 +409,7 @@ void CellModel::setup(void) {
 //------- dissolve
 eCellState CellModel::dissolve(const Cell* const cell) {
   u8 nw = 0;      // number of wet neighbors
+  u8 np = 0;      // number of polymer neighbors 
   f32 sumC = 0.f; // sum of neighbor concentrations
 	
   for(u8 i = 0; i < NUM_NEIGHBORS; i++) {
@@ -418,25 +425,31 @@ eCellState CellModel::dissolve(const Cell* const cell) {
   // compare dry-neighbor states with this cell's state
   for(u8 i = 0; i < NUM_NEIGHBORS; i++) {
     if (cells[cell->neighborIdx[i]]->state == cell->state) {
+      // FIXME: this seems dumb, dry cells always have conc. == 1.f ?
       sumC += cells[cell->neighborIdx[i]]->concentration[cell->state];
     }
-  }      
-	
+    else if ( cells[cell->neighborIdx[i]]->state == eStatePoly ) {
+      np++;
+    }
+  }
+    
+  
   // dissolve randomly
-  if(getRand() < ((nw - sumC) / DISS_DENOM)) {
+  if (getRand() < ((nw - sumC) / DISS_DENOM)) {
     if (cell->state == eStateDrug) {
       cellsUpdate[cell->idx]->state = eStateDissDrug;
       cellsUpdate[cell->idx]->dissCount = 0;
+      cellsUpdate[cell->idx]->dissMax = dissNSteps[np];
     }
     if (cell->state == eStateEx) {
       cellsUpdate[cell->idx]->state = eStateDissEx;
       cellsUpdate[cell->idx]->dissCount = 0;
+      cellsUpdate[cell->idx]->dissMax = dissNSteps[np];
     }
     if (cell->state == eStateVoid) {
       // FIXME: should void cells "dissolve" gradually?
       cellsUpdate[cell->idx]->state = eStateWet;
-    }
-		
+    }		
   }
   return cellsUpdate[cell->idx]->state;
 }
@@ -446,8 +459,9 @@ eCellState CellModel::dissolve(const Cell* const cell) {
 eCellState CellModel::continueDissolve(const Cell* const cell) {
   cellsUpdate[cell->idx]->dissCount++;
   // FIXME: (?) careful, this concentration index is a nasty enum hack
-  cellsUpdate[cell->idx]->concentration[cell->state - 2] += DISS_INC;
-  if(cellsUpdate[cell->idx]->dissCount == DISS_STEPS) {
+  
+cellsUpdate[cell->idx]->concentration[cell->state - 2] += cell->dissInc;
+  if(cellsUpdate[cell->idx]->dissCount == cell->dissMax) {
     cellsUpdate[cell->idx]->state = eStateWet;
   }
   return cellsUpdate[cell->idx]->state;
@@ -458,12 +472,16 @@ void CellModel::diffuse(const Cell* const cell) {
   f32 cMeanDrug = 0.f;
   f32 cMeanEx = 0.f;
   u8 nw = 0;
+  u8 np = 0;
 	
   for(u8 i=0; i<NUM_NEIGHBORS; i++) {
     if ((cells[cell->neighborIdx[i]]->state == eStateWet) || (cells[cell->neighborIdx[i]]->state == eStateBound)) {
       nw++;
       cMeanDrug += cells[cell->neighborIdx[i]]->concentration[eStateDrug];
       cMeanEx += cells[cell->neighborIdx[i]]->concentration[eStateEx];
+    }
+    else if ( cells[cell->neighborIdx[i]]->state == eStatePoly ) {
+      np++;
     }
   }
   // no wet neighbors => no effect
@@ -480,8 +498,8 @@ void CellModel::diffuse(const Cell* const cell) {
     + (dEx * nw / cellLength2 * (cMeanEx - cell->concentration[eStateEx]) * dt);
   */ // refactored:
 	
-  const f32 tmp = nw * dt_l2;
-  const f32 drugDiff = (dDrug * tmp * (cMeanDrug - cell->concentration[eStateDrug]));
+  const f32 tmp = nw * dt_l2 * dDrug * diffNMul[np];
+  const f32 drugDiff = tmp * (cMeanDrug - cell->concentration[eStateDrug]);
   // drugMass += drugDiff;
 	
   cellsUpdate[cell->idx]->concentration[eStateDrug] = cell->concentration[eStateDrug] + drugDiff;
@@ -493,22 +511,22 @@ void CellModel::diffuse(const Cell* const cell) {
 //---------- iterate!!
 f32 CellModel::iterate(void) {
   Cell* cell;
-  /////// TODO: incorporate threading engine. debugging single-threaded version first...
+  /////// TODO: incorporate threading engine. debugging single-tvhreaded version first...
 	
   for (u32 i=0; i<numCellsToProcess; i++) {
     cell = cells[cellsToProcess[i]];
+    // FIXME: processing order of these cases could be optimized
     switch(cell->state) {
     case eStatePoly:
-      continue;
+      // polymer cells: no change
       break;
     case eStateVoid:
-      /// FIXME: what actually is supposed to happen to empty cells???
-      /// TODO: they get "dissolved" perhaps
+      // void cells: deissolve (FIXME?)
       dissolve(cell);
-      continue;
       break;
     case eStateEx:
     case eStateDrug:
+      // drug or excipient: 
       dissolve(cell);
       break;
     case eStateDissDrug:
@@ -529,9 +547,19 @@ f32 CellModel::iterate(void) {
   ///// TODO: join udpate threads here
 	
   // update the cell data
+  // FIXME: memcpy() in this function is eating 20% of CPU time.
+  // should be able to just swap pointers somehow...
+
+  /*
+  Cell** cellsTmp = cells;
+  cells = cellsUpdate;
+  cellsUpdate = cellsTmp;
+  */
+  
   for(u32 i=0; i<numCellsToProcess; i++) {
     *(cells[cellsToProcess[i]]) = *(cellsUpdate[cellsToProcess[i]]);
   }
+  
 	
   ///// TODO: join copy threads here
 	
@@ -542,7 +570,7 @@ f32 CellModel::iterate(void) {
 void CellModel::calcDrugMass(void) {
   // calculate current drug mass
   // FIXME: this is the slow way to do it.
-  // better to update during the diffusion step.
+  // better to update during the diffusion step?
   // tryingfor accuracy first.
   Cell* cell;	
   drugMass = 0.f;
@@ -554,7 +582,7 @@ void CellModel::calcDrugMass(void) {
       drugMass += 1.f;
       break;
     case eStateDissDrug:
-      drugMass += (1.f - (DISS_INC * cell->dissCount) + cell->concentration[eStateDrug]);
+      drugMass += (1.f - (cell->dissInc * cell->dissCount) + cell->concentration[eStateDrug]);
       break;
     case eStateWet:
       drugMass += cell->concentration[eStateDrug];

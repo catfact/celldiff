@@ -21,8 +21,6 @@
 #include <cstdlib>
 #endif
 
-#include <vector>
-// #include <random>
 #include "types.h"
 
 //======= defines
@@ -46,9 +44,9 @@
 // but in the MATLAB program it seems to always occur in a single iteration.
 // so i'm making an arbitrary assumption here:
 // number of dissolution steps
-#define DISS_STEPS 5
+// #define DISS_STEPS 5
 // amount by which drug/excip concentration increases per dissolution step
-#define DISS_INC 0.2
+// #define DISS_INC 0.2
 
 //======= types
 // enumeration of cell states
@@ -72,15 +70,20 @@ public:
   ~Cell();
 public:
   // state
-  eCellState  state; 
+  eCellState state; 
   // index
-  u32         idx;
+  u32 idx;
   // array of neighbor indices
-  u32   neighborIdx[NUM_NEIGHBORS];
+  u32 neighborIdx[NUM_NEIGHBORS];
   // concentration of drug, excipient
   f32 concentration[2];
   // counter for gradual dissolution
-  u16     dissCount;
+  u16 dissCount;
+  // maximum count for gradual dissolution
+  u16 dissMax;
+  // dissolution increment
+  f32 dissInc;
+
 };
 
 class CellModel {
@@ -140,8 +143,10 @@ public: // FIXME: many of these could be privatized
   f32 drugMass;
   // a common intermediate multiplier
   f32 dt_l2;
-  // diffusion weights
-  static const f32 diffNMul[NUM_NEIGHBORS];
+  // diffusion weights given number of polymer neighbors
+  static const f32 diffNMul[7];
+  // dissolution steps given number of polymer neighbors
+  static const f32 dissNSteps[7];
   // flattened array of all cells
   Cell**        cells;         
   // copy for updating after iteration
