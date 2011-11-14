@@ -91,6 +91,7 @@ void CellModel::findNeighbors(Cell* cell) {
 //------ c-tor
 CellModel::CellModel(
                      u32 n,
+		     f64 h,
                      f64 pdrug,
                      f64 pex,
                      f64 ppoly,
@@ -104,6 +105,7 @@ CellModel::CellModel(
   rngEngine(), rngDist(0.f, 1.f),
 #endif
   cubeLength(n),
+  cylinderHeight(h),
   pDrug(pdrug),
   pEx(pex),
   pPoly(ppoly),
@@ -157,11 +159,14 @@ void CellModel::setup(void) {
   u32 nIdx;
   u32 nIdx2;
   u8 l, m, n;
-	
+  u32 numH;
+
   cX = cubeLength >> 1;
   cY = cX;
   cubeR2 = (cX-1) * (cX-1);
   eCellState swapstate;
+
+  numH = cylinderHeight * cubeLength;
 	
   // offset coordinates to get diagonals in 2x2x2
   const u8 diags[4][3]	= { {0, 0, 0}, {0, 1, 1}, {1, 0, 1}, {1, 1, 0} };
@@ -197,7 +202,7 @@ void CellModel::setup(void) {
 	else {
 	  r2 = (i-cX+1)*(i-cX+1) + (j-cY+1)*(j-cY+1);
 	  // TODO!!!  check cylinder height 
-	  if(r2 < cubeR2) {
+	  if((r2 < cubeR2) && (k <= (numH))) {
 						
 	    rnd = getRand();
 	    if(rnd < pDrug) {
@@ -256,7 +261,6 @@ void CellModel::setup(void) {
   } // end i loop
 	
   /// 2nd loop: each polymer 2x2x2 randomly swaps diagonal complements with neighbors
-  ////// FIXME: this is getting confused on the boundary sometimes?
   for(u32 i=0; i<cubeLength; i += 2) {
     for(u32 j=0; j<cubeLength; j += 2) {
       for(u32 k=0; k<cubeLength; k += 2) {
@@ -316,7 +320,9 @@ void CellModel::setup(void) {
 	      numNotPolyN++;
 	    }
 	  }
-
+	  
+	  // continue loop if there are no non-poly neighors,
+	  // otherwise randomly choose between them and swap diagonals
 	  if (numNotPolyN == 0) { continue; } 
 	  else {
 	    swapN = (u8)(getRand() * ((f64)numNotPolyN  - 0.5f));
@@ -338,7 +344,7 @@ void CellModel::setup(void) {
 	
 	
   /// 3rd loop: find cells to process
-  u8 tmp = 0;
+  u8 proc = 0;
   eCellState tmpState;
   for(u32 i=0; i<numCells; i++) {
     findNeighbors(cells[i]);
@@ -347,20 +353,20 @@ void CellModel::setup(void) {
     case eStateDrug:
     case eStateEx:
     case eStateVoid:
-      tmp = 1;
+      proc = 1;
       // printf("{ %d, %d } ; ", (int)numCellsToProcess, (int)cells[i]->idx);
       break;
     case eStateBound:
       // want to process boundary cells only if they adjoin a non-boundary
       for(u8 ni = 0; ni<NUM_NEIGHBORS; ni++) {
 	tmpState = cells[cells[i]->neighborIdx[ni]]->state;
-	tmp |= (tmpState != eStatePoly && tmpState != eStateBound);
+	proc |= (tmpState != eStatePoly && tmpState != eStateBound);
       }
     break;
     default:
       break;
     }
-    if(tmp) { 	
+    if(proc) { 	
       cellsToProcess[numCellsToProcess] = cells[i]->idx;
       numCellsToProcess++;
       // find neighbors-with-polymer count
@@ -374,8 +380,8 @@ void CellModel::setup(void) {
       cells[i]->dissSteps = dissNSteps[np];
       cells[i]->dissInc = 1.0 / (f64)(cells[i]->dissSteps);
       ///// DEBUG
-      int dum=0;
-      dum++;
+      //    int dum=0;
+      // dum++;
     }
  
       // printf("{ %d, %d } ; ", (int)numCellsToProcess, (int)cells[i]->idx);
@@ -438,7 +444,7 @@ eCellState CellModel::continueDissolve(const Cell* const cell) {
   cellsUpdate[cell->idx]->dissCount++;
   // FIXME: (?) careful, this concentration index is a nasty enum hack
   
-cellsUpdate[cell->idx]->concentration[cell->state - 2] = cells[cell->idx]->concentration[cell->state - 2] + cell->dissInc;
+  cellsUpdate[cell->idx]->concentration[cell->state - 2] = cells[cell->idx]->concentration[cell->state - 2] + cell->dissInc;
   if(cellsUpdate[cell->idx]->dissCount >= cell->dissSteps) {
     cellsUpdate[cell->idx]->state = eStateWet;
   }

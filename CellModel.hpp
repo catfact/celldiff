@@ -91,6 +91,7 @@ public:
 class CellModel {
 public:
   CellModel(u32 n,
+	    f64 h,
 	    f64 pDrug,
 	    f64 pEx,
 	    f64 pPoly,
@@ -137,6 +138,8 @@ public: // FIXME: many of these could be privatized
   // number of cells on each side of space
   u32 cubeLength;
   u32 cubeLength2;
+  // cylinder height as fraction of cube height
+  f64 cylinderHeight;
   // number of total cells
   u32 numCells;
   // initial total mass of drug
