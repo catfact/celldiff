@@ -1,7 +1,7 @@
 /*
  *  CellModel.cpp
  *  cellDiffusion
- *u
+ *
  *  Created by Ezra Buchla on 10/6/11.
  */
 
@@ -30,7 +30,7 @@ Cell::~Cell() {
 // ===== CellModel
 
 //// constant diffusion multiplier given count of poly neighbors
-const f32 CellModel::diffNMul[7] = {
+const f64 CellModel::diffNMul[7] = {
   1.f,
   0.9f,
   0.1f,
@@ -40,8 +40,8 @@ const f32 CellModel::diffNMul[7] = {
 };
 
 //// constant dissolution steps given count of poly neighbors
-const f32 CellModel::dissNSteps[7] = {
-  0, 50, 100, 100, 200, 400, 800
+const f64 CellModel::dissNSteps[7] = {
+  1, 50, 100, 100, 200, 400, 800
 };
 
 // index <-> coordinate conversion
@@ -91,13 +91,13 @@ void CellModel::findNeighbors(Cell* cell) {
 //------ c-tor
 CellModel::CellModel(
                      u32 n,
-                     f32 pdrug,
-                     f32 pex,
-                     f32 ppoly,
-                     f32 cl,
-                     f32 dT,
-                     f32 ddrug,
-                     f32 dex,
+                     f64 pdrug,
+                     f64 pex,
+                     f64 ppoly,
+                     f64 cl,
+                     f64 dT,
+                     f64 ddrug,
+                     f64 dex,
                      u32 seed
 		     ) :
 #if USE_BOOST
@@ -151,7 +151,7 @@ void CellModel::setup(void) {
   u32 cX;
   u32 cY;
   u32 r2;
-  f32 rnd;
+  f64 rnd;
   u32 cubeR2;
   u32 idx;
   u32 nIdx;
@@ -255,40 +255,8 @@ void CellModel::setup(void) {
     } // end j loop
   } // end i loop
 	
-  /*
- /// 2nd loop: find sandwiched dry cells, move polymer
- for(u32 i=0; i<cubeLength; i += 2) {
- for(u32 j=0; j<cubeLength; j += 2) {
- for(u32 k=0; k<cubeLength; k += 2) {
- idx = subToIdx(i, j, k);
- if( (cells[idx]->state == eStateDrug) || (cells[idx]->state == eStateEx) ) {
- nIdx = subToIdx(i+2, j, k);
- if (cells[nIdx]->state == eStatePoly) {
- nIdx2 = subToIdx(i-2, j, k);
- if (cells[nIdx2]->state == eStatePoly) {
- // move poly
- }
- }
- nIdx = subToIdx(i, j+2, k);
- if (cells[nIdx]->state == eStatePoly) {
- nIdx2 = subToIdx(i, j-2, k);
- if (cells[nIdx2]->state == eStatePoly) {
- // move poly
- }
- }
- nIdx = subToIdx(i, j, k+2);
- if (cells[nIdx]->state == eStatePoly) {
- nIdx2 = subToIdx(i, j, k-2);
- if (cells[nIdx2]->state == eStatePoly) {
- // move poly
- }
- }
- }
- }
- }
- }
-  */
   /// 2nd loop: each polymer 2x2x2 randomly swaps diagonal complements with neighbors
+  ////// FIXME: this is getting confused on the boundary sometimes?
   for(u32 i=0; i<cubeLength; i += 2) {
     for(u32 j=0; j<cubeLength; j += 2) {
       for(u32 k=0; k<cubeLength; k += 2) {
@@ -340,7 +308,9 @@ void CellModel::setup(void) {
 	      break;
 	    }
 	    nIdx = subToIdx(nIdxBase[0], nIdxBase[1], nIdxBase[2]);
-	    if((cells[nIdx]->state != eStatePoly) && (cells[nIdx+1]->state != eStatePoly)) {
+	    if( (cells[nIdx]->state != eStatePoly)
+		&& (cells[nIdx+1]->state != eStatePoly)
+		&& (cells[nIdx+1]->state != eStateBound)) {
 	      // this neighbor is not polymer, and has not been swapped, so add it to the swappable list
 	      notPolyN[numNotPolyN] = nIdx;
 	      numNotPolyN++;
@@ -349,7 +319,7 @@ void CellModel::setup(void) {
 
 	  if (numNotPolyN == 0) { continue; } 
 	  else {
-	    swapN = (u8)(getRand() * ((f32)numNotPolyN  - 0.5f));
+	    swapN = (u8)(getRand() * ((f64)numNotPolyN  - 0.5f));
 	    idxToSub(notPolyN[swapN], &(nIdxBase[0]), &(nIdxBase[1]), &(nIdxBase[2]));
 	    for(diag = 0; diag<4; diag++) {
 	      nIdx = subToIdx(i+diags[diag][0], j+diags[diag][1], k+diags[diag][2]);
@@ -368,7 +338,7 @@ void CellModel::setup(void) {
 	
 	
   /// 3rd loop: find cells to process
-  u8 tmp;
+  u8 tmp = 0;
   eCellState tmpState;
   for(u32 i=0; i<numCells; i++) {
     findNeighbors(cells[i]);
@@ -377,28 +347,41 @@ void CellModel::setup(void) {
     case eStateDrug:
     case eStateEx:
     case eStateVoid:
-      cellsToProcess[numCellsToProcess] = cells[i]->idx;
-      numCellsToProcess++;
+      tmp = 1;
       // printf("{ %d, %d } ; ", (int)numCellsToProcess, (int)cells[i]->idx);
       break;
     case eStateBound:
       // want to process boundary cells only if they adjoin a non-boundary
-      tmp = 1;
       for(u8 ni = 0; ni<NUM_NEIGHBORS; ni++) {
 	tmpState = cells[cells[i]->neighborIdx[ni]]->state;
-	tmp &= (tmpState == eStatePoly || tmpState == eStateBound);
+	tmp |= (tmpState != eStatePoly && tmpState != eStateBound);
       }
-      if(tmp) { 	
-	cellsToProcess[numCellsToProcess] = cells[i]->idx;
-	numCellsToProcess++;
-	// printf("{ %d, %d } ; ", (int)numCellsToProcess, (int)cells[i]->idx);
-      }
-      break;
+    break;
     default:
       break;
     }
+    if(tmp) { 	
+      cellsToProcess[numCellsToProcess] = cells[i]->idx;
+      numCellsToProcess++;
+      // find neighbors-with-polymer count
+      u8 np = 0;
+      for(u8 nb=0; nb<NUM_NEIGHBORS; nb++) {
+	if ( cells[cells[i]->neighborIdx[nb]]->state == eStatePoly ) {
+	  np++;
+	}
+      }
+      cells[i]->diffMul = diffNMul[np];
+      cells[i]->dissSteps = dissNSteps[np];
+      cells[i]->dissInc = 1.0 / (f64)(cells[i]->dissSteps);
+      ///// DEBUG
+      int dum=0;
+      dum++;
+    }
+ 
+      // printf("{ %d, %d } ; ", (int)numCellsToProcess, (int)cells[i]->idx);
+    
   }
-       
+    
   // initialize the update data
   for(u32 i=0; i<numCells; i++) {
     *(cellsUpdate[i]) = *(cells[i]);
@@ -410,7 +393,7 @@ void CellModel::setup(void) {
 eCellState CellModel::dissolve(const Cell* const cell) {
   u8 nw = 0;      // number of wet neighbors
   u8 np = 0;      // number of polymer neighbors 
-  f32 sumC = 0.f; // sum of neighbor concentrations
+  f64 sumC = 0.f; // sum of neighbor concentrations
 	
   for(u8 i = 0; i < NUM_NEIGHBORS; i++) {
     if ((cells[cell->neighborIdx[i]]->state == eStateWet) || (cells[cell->neighborIdx[i]]->state == eStateBound)) {
@@ -428,9 +411,6 @@ eCellState CellModel::dissolve(const Cell* const cell) {
       // FIXME: this seems dumb, dry cells always have conc. == 1.f ?
       sumC += cells[cell->neighborIdx[i]]->concentration[cell->state];
     }
-    else if ( cells[cell->neighborIdx[i]]->state == eStatePoly ) {
-      np++;
-    }
   }
     
   
@@ -439,12 +419,10 @@ eCellState CellModel::dissolve(const Cell* const cell) {
     if (cell->state == eStateDrug) {
       cellsUpdate[cell->idx]->state = eStateDissDrug;
       cellsUpdate[cell->idx]->dissCount = 0;
-      cellsUpdate[cell->idx]->dissMax = dissNSteps[np];
     }
     if (cell->state == eStateEx) {
       cellsUpdate[cell->idx]->state = eStateDissEx;
       cellsUpdate[cell->idx]->dissCount = 0;
-      cellsUpdate[cell->idx]->dissMax = dissNSteps[np];
     }
     if (cell->state == eStateVoid) {
       // FIXME: should void cells "dissolve" gradually?
@@ -460,17 +438,18 @@ eCellState CellModel::continueDissolve(const Cell* const cell) {
   cellsUpdate[cell->idx]->dissCount++;
   // FIXME: (?) careful, this concentration index is a nasty enum hack
   
-cellsUpdate[cell->idx]->concentration[cell->state - 2] += cell->dissInc;
-  if(cellsUpdate[cell->idx]->dissCount == cell->dissMax) {
+cellsUpdate[cell->idx]->concentration[cell->state - 2] = cells[cell->idx]->concentration[cell->state - 2] + cell->dissInc;
+  if(cellsUpdate[cell->idx]->dissCount >= cell->dissSteps) {
     cellsUpdate[cell->idx]->state = eStateWet;
   }
   return cellsUpdate[cell->idx]->state;
 }
 
+
 // calculate diffusion for fully-dissolved cells
 void CellModel::diffuse(const Cell* const cell) {
-  f32 cMeanDrug = 0.f;
-  f32 cMeanEx = 0.f;
+  f64 cMeanDrug = 0.f;
+  f64 cMeanEx = 0.f;
   u8 nw = 0;
   u8 np = 0;
 	
@@ -480,9 +459,6 @@ void CellModel::diffuse(const Cell* const cell) {
       cMeanDrug += cells[cell->neighborIdx[i]]->concentration[eStateDrug];
       cMeanEx += cells[cell->neighborIdx[i]]->concentration[eStateEx];
     }
-    else if ( cells[cell->neighborIdx[i]]->state == eStatePoly ) {
-      np++;
-    }
   }
   // no wet neighbors => no effect
   if (nw == 0) { return; }
@@ -490,17 +466,22 @@ void CellModel::diffuse(const Cell* const cell) {
   cMeanDrug /= nw;
   cMeanEx /= nw;
 	
-  /*
-    cellsUpdate[cell->idx]->concentration[eStateDrug] = cell->concentration[eStateDrug]
-    + (dDrug * nw / cellLength2 * (cMeanDrug - cell->concentration[eStateDrug]) * dt);
+  
+ //   cellsUpdate[cell->idx]->concentration[eStateDrug] = cell->concentration[eStateDrug]
+ //   + (dDrug * nw / cellLength2 * (cMeanDrug - cell->concentration[eStateDrug]) * dt);
 	 
-    cellsUpdate[cell->idx]->concentration[eStateEx] = cell->concentration[eStateEx]
-    + (dEx * nw / cellLength2 * (cMeanEx - cell->concentration[eStateEx]) * dt);
-  */ // refactored:
+//    cellsUpdate[cell->idx]->concentration[eStateEx] = cell->concentration[eStateEx]
+ //   + (dEx * nw / cellLength2 * (cMeanEx - cell->concentration[eStateEx]) * dt);
+ 
+ // refactored:
 	
-  const f32 tmp = nw * dt_l2 * dDrug * diffNMul[np];
-  const f32 drugDiff = tmp * (cMeanDrug - cell->concentration[eStateDrug]);
-  // drugMass += drugDiff;
+
+  
+  // FIXME: still not sure how to apply poly-neighbors-diffusin-multiplier...
+    const f64 tmp = nw * dt_l2;
+  const f64 drugDiff = (dDrug * tmp * (cMeanDrug - cell->concentration[eStateDrug]));  
+
+// drugMass += drugDiff;
 	
   cellsUpdate[cell->idx]->concentration[eStateDrug] = cell->concentration[eStateDrug] + drugDiff;
 	
@@ -508,8 +489,11 @@ void CellModel::diffuse(const Cell* const cell) {
     + (dEx * tmp * (cMeanEx - cell->concentration[eStateEx]));
 }
 
+
+
+
 //---------- iterate!!
-f32 CellModel::iterate(void) {
+f64 CellModel::iterate(void) {
   Cell* cell;
   /////// TODO: incorporate threading engine. debugging single-tvhreaded version first...
 	
@@ -517,9 +501,12 @@ f32 CellModel::iterate(void) {
     cell = cells[cellsToProcess[i]];
     // FIXME: processing order of these cases could be optimized
     switch(cell->state) {
+      /*
     case eStatePoly:
+      // shouldn't get here!
       // polymer cells: no change
       break;
+      */
     case eStateVoid:
       // void cells: deissolve (FIXME?)
       dissolve(cell);
@@ -564,7 +551,9 @@ f32 CellModel::iterate(void) {
   ///// TODO: join copy threads here
 	
   calcDrugMass();
-  return (drugMassTotal - drugMass) / drugMassTotal;
+ 
+   return drugMassTotal - drugMass;
+  //  return drugMass;
 }
 
 void CellModel::calcDrugMass(void) {
@@ -582,8 +571,8 @@ void CellModel::calcDrugMass(void) {
       drugMass += 1.f;
       break;
     case eStateDissDrug:
-      drugMass += (1.f - (cell->dissInc * cell->dissCount) + cell->concentration[eStateDrug]);
-      break;
+      //      drugMass += (1.f - (cell->dissInc * cell->dissCount) + cell->concentration[eStateDrug]);
+      // break;
     case eStateWet:
       drugMass += cell->concentration[eStateDrug];
       break;
@@ -594,7 +583,7 @@ void CellModel::calcDrugMass(void) {
 }
 
 /// random number generation
-f32 CellModel::getRand(void) {
+f64 CellModel::getRand(void) {
 #if USE_BOOST
   return (*rngGen)(); 
 #else

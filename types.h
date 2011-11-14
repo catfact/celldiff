@@ -10,6 +10,7 @@
 #define _CELLDIFF_TYPES_H_
 
 typedef float f32;
+typedef double f64;
 typedef unsigned int u16;
 typedef unsigned long int u32;
 typedef unsigned long long int u64;

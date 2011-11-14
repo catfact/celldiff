@@ -76,32 +76,34 @@ public:
   // array of neighbor indices
   u32 neighborIdx[NUM_NEIGHBORS];
   // concentration of drug, excipient
-  f32 concentration[2];
+  f64 concentration[2];
   // counter for gradual dissolution
   u16 dissCount;
   // maximum count for gradual dissolution
-  u16 dissMax;
+  u16 dissSteps;
   // dissolution increment
-  f32 dissInc;
+  f64 dissInc;
+  // diffusion multiplier
+  f64 diffMul;
 
 };
 
 class CellModel {
 public:
   CellModel(u32 n,
-	    f32 pDrug,
-	    f32 pEx,
-	    f32 pPoly,
-	    f32 cellW,
-	    f32 dT,
-	    f32 ddrug=7e-6,
-	    f32 dex=7e-6,
+	    f64 pDrug,
+	    f64 pEx,
+	    f64 pPoly,
+	    f64 cellW,
+	    f64 dT,
+	    f64 ddrug=7e-6,
+	    f64 dex=7e-6,
 	    u32 seed=47u);
   ~CellModel(void);
   // set initial values, tablet shape, etc
   void setup(void);
   // advance time in the model by one step
-  f32 iterate(void);
+  f64 iterate(void);
 private:
   // populate neighbor index array for a given cell
   void findNeighbors(Cell* cell);
@@ -118,35 +120,35 @@ private:
   u32 subToIdx(const u32 x, const u32 y, const u32 z);
   void idxToSub(u32 idx, u32* pX, u32* pY, u32* pZ);
   // random number generation
-  f32 getRand(void);
+  f64 getRand(void);
 	
 public: // FIXME: many of these could be privatized
 	// cell type distribution
-  f32 pDrug;
-  f32 pEx;
-  f32 pPoly;
+  f64 pDrug;
+  f64 pEx;
+  f64 pPoly;
   // diffusion constants
-  f32 dDrug;
-  f32 dEx;
+  f64 dDrug;
+  f64 dEx;
   // time to diffuse length of cell
-  f32 dt;
+  f64 dt;
   // length of cell
-  f32 cellLength;
+  f64 cellLength;
   // number of cells on each side of space
   u32 cubeLength;
   u32 cubeLength2;
   // number of total cells
   u32 numCells;
   // initial total mass of drug
-  f32 drugMassTotal;
+  f64 drugMassTotal;
   // current mass of drug, including diffused concentrations
-  f32 drugMass;
+  f64 drugMass;
   // a common intermediate multiplier
-  f32 dt_l2;
+  f64 dt_l2;
   // diffusion weights given number of polymer neighbors
-  static const f32 diffNMul[7];
+  static const f64 diffNMul[7];
   // dissolution steps given number of polymer neighbors
-  static const f32 dissNSteps[7];
+  static const f64 dissNSteps[7];
   // flattened array of all cells
   Cell**        cells;         
   // copy for updating after iteration
@@ -160,7 +162,7 @@ public: // FIXME: many of these could be privatized
   // randomization algorithm
   typedef boost::mt19937 rng_t; // mersenne twister
   // distribution (maps algorithm to data type and range)
-  typedef boost::uniform_real<f32> dist_t;
+  typedef boost::uniform_real<f64> dist_t;
   rng_t   rngEngine;
   dist_t  rngDist;
   // generator (functor) for streams of values
