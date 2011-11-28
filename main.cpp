@@ -38,7 +38,7 @@ static u32 frameNum = 0;
 // concentrations
 static f64 pd=0.1, pe=0.5, pp=0.4;
 // cylinder height
-static f64 h=0.9;
+static f64 h=0.23;
 // RNG seed
 static u32 seed = 47;
 // release curve output file path
