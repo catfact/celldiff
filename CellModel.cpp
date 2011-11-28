@@ -14,33 +14,29 @@
 #include "CellModel.hpp"
 
 //================================================================
+//================================================================
 //======= Cell
 Cell::Cell(u32 i) {
   idx = i;
   concentration[0] = 0.f;
   concentration[1] = 0.f;
-  diffMul = 1.0;
 }
 
 Cell::~Cell() {
 }
 
 //================================================================
+//================================================================
 // ===== CellModel
 
 //// constant diffusion multiplier given count of poly neighbors
-/*
-const f64 CellModel::diffNMul[6] = {
-  1.0,
-  0.9,
-  0.1,
-  0.01,
-  0.001,
-  0.0
-};
-*/
-const f64 CellModel::diffNMul[6] = {
-  1.0, 1.0, 1.0, 1.0, 1.0, 1.0
+const f64 CellModel::diffNMul[7] = {
+  1.f,
+  0.9f,
+  0.1f,
+  0.01f,
+  0.001f,
+  0.f
 };
 
 //// constant dissolution steps given count of poly neighbors
@@ -124,12 +120,12 @@ CellModel::CellModel(
   cubeLength2 = cubeLength * cubeLength;
   numCells = cubeLength * cubeLength * cubeLength;
   dt_l2 = dt / (cellLength * cellLength);
-  cells =  new Cell* [numCells];
-  cellsUpdate =	new Cell* [numCells];
-  cellsToProcess = new u32 [numCells];
+  cells =				new Cell* [numCells];
+  cellsUpdate =		new Cell* [numCells];
+  cellsToProcess =	new u32 [numCells];
   for(u32 i=0; i<numCells; i++) {
-    cells[i] = new Cell(i);
-    cellsUpdate[i] = new Cell(i);
+    cells[i] =			new Cell(i);
+    cellsUpdate[i] =	new Cell(i);
   }
   // seed the random number engine
 #if USE_BOOST
@@ -387,6 +383,9 @@ void CellModel::setup(void) {
       //    int dum=0;
       // dum++;
     }
+ 
+      // printf("{ %d, %d } ; ", (int)numCellsToProcess, (int)cells[i]->idx);
+    
   }
     
   // initialize the update data
@@ -463,13 +462,8 @@ void CellModel::diffuse(const Cell* const cell) {
   for(u8 i=0; i<NUM_NEIGHBORS; i++) {
     if ((cells[cell->neighborIdx[i]]->state == eStateWet) || (cells[cell->neighborIdx[i]]->state == eStateBound)) {
       nw++;
-      // FIXME:      
-      /*
-	cMeanDrug += cells[cell->neighborIdx[i]]->concentration[eStateDrug] * cells[cell->neighborIdx[i]]->diffMul;
-	cMeanEx += cells[cell->neighborIdx[i]]->concentration[eStateEx] * cells[cell->neighborIdx[i]]->diffMul;
-      */
-	cMeanDrug += cells[cell->neighborIdx[i]]->concentration[eStateDrug];
-	cMeanEx += cells[cell->neighborIdx[i]]->concentration[eStateEx];
+      cMeanDrug += cells[cell->neighborIdx[i]]->concentration[eStateDrug];
+      cMeanEx += cells[cell->neighborIdx[i]]->concentration[eStateEx];
     }
   }
   // no wet neighbors => no effect
@@ -478,30 +472,31 @@ void CellModel::diffuse(const Cell* const cell) {
   cMeanDrug /= nw;
   cMeanEx /= nw;
 	
-  //   cellsUpdate[cell->idx]->concentration[eStateDrug] = cell->concentration[eStateDrug]
-  //   + (dDrug * nw / cellLength2 * (cMeanDrug - cell->concentration[eStateDrug]) * dt);
+  
+ //   cellsUpdate[cell->idx]->concentration[eStateDrug] = cell->concentration[eStateDrug]
+ //   + (dDrug * nw / cellLength2 * (cMeanDrug - cell->concentration[eStateDrug]) * dt);
 	 
-  //    cellsUpdate[cell->idx]->concentration[eStateEx] = cell->concentration[eStateEx]
-  //   + (dEx * nw / cellLength2 * (cMeanEx - cell->concentration[eStateEx]) * dt);
+//    cellsUpdate[cell->idx]->concentration[eStateEx] = cell->concentration[eStateEx]
+ //   + (dEx * nw / cellLength2 * (cMeanEx - cell->concentration[eStateEx]) * dt);
  
-  // refactored:
-	  
-  const f64 tmp = nw * dt_l2;
-  // FIXME: diffusion multiplier is messed up
-  //  const f64 drugDiff = (dDrug * tmp * (cMeanDrug - (cell->concentration[eStateDrug] * cell->diffMul)));  
-  const f64 drugDiff = (dDrug * tmp * (cMeanDrug - (cell->concentration[eStateDrug])));  
+ // refactored:
+	
 
-  // drugMass += drugDiff;
   
+  // FIXME: still not sure how to apply poly-neighbors-diffusin-multiplier...
+    const f64 tmp = nw * dt_l2;
+  const f64 drugDiff = (dDrug * tmp * (cMeanDrug - cell->concentration[eStateDrug]));  
+
+// drugMass += drugDiff;
+	
   cellsUpdate[cell->idx]->concentration[eStateDrug] = cell->concentration[eStateDrug] + drugDiff;
-  
-  /// FIXME: diff multiplier is messed up
-  //  cellsUpdate[cell->idx]->concentration[eStateEx] = cell->concentration[eStateEx]
-  //  + (dEx * tmp * (cMeanEx - (cell->concentration[eStateEx] * cell->diffMul)));
+	
   cellsUpdate[cell->idx]->concentration[eStateEx] = cell->concentration[eStateEx]
-    + (dEx * tmp * (cMeanEx - (cell->concentration[eStateEx])));
-
+    + (dEx * tmp * (cMeanEx - cell->concentration[eStateEx]));
 }
+
+
+
 
 //---------- iterate!!
 f64 CellModel::iterate(void) {
@@ -557,7 +552,8 @@ f64 CellModel::iterate(void) {
   for(u32 i=0; i<numCellsToProcess; i++) {
     *(cells[cellsToProcess[i]]) = *(cellsUpdate[cellsToProcess[i]]);
   }
- 	
+  
+	
   ///// TODO: join copy threads here
 	
   calcDrugMass();

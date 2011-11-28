@@ -149,7 +149,7 @@ public: // FIXME: many of these could be privatized
   // a common intermediate multiplier
   f64 dt_l2;
   // diffusion weights given number of polymer neighbors
-  static const f64 diffNMul[6];
+  static const f64 diffNMul[7];
   // dissolution steps given number of polymer neighbors
   static const f64 dissNSteps[7];
   // flattened array of all cells
