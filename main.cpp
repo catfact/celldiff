@@ -187,7 +187,7 @@ int main (const int argc, char* const* argv) {
     const double r = released[1] / model.drugMassTotal;
     mvprintw(1, 0, "iteration %d of %d, released %f of %f, ratio %f", step, iterationCount, released[1], model.drugMassTotal, r);
 
-    fprintf(releasedOut, ",%f", r);
+    fprintf(releasedOut, "\n%f", r);
 		
     refresh();
   } // end main loop
