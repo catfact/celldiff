@@ -31,12 +31,13 @@ Cell::~Cell() {
 
 //// constant diffusion multiplier given count of poly neighbors
 const f64 CellModel::diffNMul[7] = {
-  1.f,
-  0.9f,
-  0.1f,
-  0.01f,
-  0.001f,
-  0.f
+  1.0,
+  0.9,
+  0.1,
+  0.01,
+  0.001,
+  0.0,
+  0.0
 };
 
 //// constant dissolution steps given count of poly neighbors
@@ -113,8 +114,9 @@ CellModel::CellModel(
   dt(dT),
   dDrug(ddrug),
   dEx(dex),
-  drugMassTotal(0.f),
-  drugMass(0.f),
+  drugMassTotal(0.0),
+  trappedDrugMass(0.0),
+  drugMass(0.0),
   numCellsToProcess(0)
 {
   cubeLength2 = cubeLength * cubeLength;
@@ -367,15 +369,25 @@ void CellModel::setup(void) {
       break;
     }
     if(proc) { 	
-      cellsToProcess[numCellsToProcess] = cells[i]->idx;
-      numCellsToProcess++;
       // find neighbors-with-polymer count
       u8 np = 0;
       for(u8 nb=0; nb<NUM_NEIGHBORS; nb++) {
-	if ( cells[cells[i]->neighborIdx[nb]]->state == eStatePoly ) {
-	  np++;
-	}
+        if ( cells[cells[i]->neighborIdx[nb]]->state == eStatePoly ) {
+          np++;
+        }
       }
+      
+      // don't need to process if cell is trapped by polymer
+      if (np > 5) {
+        if(cells[i]->state == eStateDrug) {
+          trappedDrugMass += 1.0;
+        }
+        continue;
+      }
+      
+      cellsToProcess[numCellsToProcess] = cells[i]->idx;
+      numCellsToProcess++;
+      
       cells[i]->diffMul = diffNMul[np];
       cells[i]->dissSteps = dissNSteps[np];
       cells[i]->dissInc = 1.0 / (f64)(cells[i]->dissSteps);
@@ -568,7 +580,7 @@ void CellModel::calcDrugMass(void) {
   // better to update during the diffusion step?
   // tryingfor accuracy first.
   Cell* cell;	
-  drugMass = 0.f;
+  drugMass = trappedDrugMass;
 	
   for (u32 i=0; i<numCellsToProcess; i++) {
     cell = cells[cellsToProcess[i]];

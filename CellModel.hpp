@@ -146,6 +146,8 @@ public: // FIXME: many of these could be privatized
   f64 drugMassTotal;
   // current mass of drug, including diffused concentrations
   f64 drugMass;
+  // trapped drug mass (never changes)
+  f64 trappedDrugMass;
   // a common intermediate multiplier
   f64 dt_l2;
   // diffusion weights given number of polymer neighbors
