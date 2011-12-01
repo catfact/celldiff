@@ -462,8 +462,8 @@ void CellModel::diffuse(const Cell* const cell) {
   for(u8 i=0; i<NUM_NEIGHBORS; i++) {
     if ((cells[cell->neighborIdx[i]]->state == eStateWet) || (cells[cell->neighborIdx[i]]->state == eStateBound)) {
       nw++;
-      cMeanDrug += cells[cell->neighborIdx[i]]->concentration[eStateDrug];
-      cMeanEx += cells[cell->neighborIdx[i]]->concentration[eStateEx];
+      cMeanDrug += cells[cell->neighborIdx[i]]->concentration[eStateDrug] * cells[cell->neighborIdx[i]]->diffMul;
+      cMeanEx += cells[cell->neighborIdx[i]]->concentration[eStateEx] * cells[cell->neighborIdx[i]]->diffMul;
     }
   }
   // no wet neighbors => no effect
@@ -485,14 +485,14 @@ void CellModel::diffuse(const Cell* const cell) {
   
   // FIXME: still not sure how to apply poly-neighbors-diffusin-multiplier...
     const f64 tmp = nw * dt_l2;
-  const f64 drugDiff = (dDrug * tmp * (cMeanDrug - cell->concentration[eStateDrug]));  
+  const f64 drugDiff = (dDrug * tmp * (cMeanDrug - cell->concentration[eStateDrug] * cell->diffMul));  
 
 // drugMass += drugDiff;
 	
   cellsUpdate[cell->idx]->concentration[eStateDrug] = cell->concentration[eStateDrug] + drugDiff;
 	
   cellsUpdate[cell->idx]->concentration[eStateEx] = cell->concentration[eStateEx]
-    + (dEx * tmp * (cMeanEx - cell->concentration[eStateEx]));
+    + (dEx * tmp * (cMeanEx - cell->concentration[eStateEx]  * cell->diffMul));
 }
 
 
@@ -581,6 +581,7 @@ void CellModel::calcDrugMass(void) {
       // drugMass += 1.0;
       break;
     case eStateWet:
+    case eStateDissEx:
       drugMass += cell->concentration[eStateDrug];
       break;
     default:
