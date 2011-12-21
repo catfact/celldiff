@@ -35,7 +35,6 @@ Cell::~Cell() {
 //// constant diffusion multiplier given count of poly neighbors
 const f64 CellModel::diffNMul[7] = {
   // 1.0, 0.9, 0.1, 0.01, 0.001, 0.0, 0.0
-  // 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0
 	1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0
 };
 
