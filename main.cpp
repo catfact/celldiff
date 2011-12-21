@@ -32,7 +32,7 @@ static u32 iterationCount = 0;
 // current animation frame step
 static u32 frameStep = 0;
 // animation frame period
-static u32 frameCount = 1;
+static u32 framePeriod = 1;
 // current index of animation slice
 static u32 frameNum = 0;
 // concentrations
@@ -42,11 +42,15 @@ static f64 h=0.23;
 // RNG seed
 static u32 seed = 47;
 // release curve output file path
-static string releasedOutPath;
+static string releasedPath;
 // state output file path
-static string stateOutPath;
+static string statePath;
 // state output period (0 == no output)
-static u32 stateOutPeriod = 0;
+static u32 statePeriod = 0;
+// state output step counter 
+static u32 stateStep = 0;
+// ascii output toggle
+static u32 asciiout = 1;
 
 //============== function declarations
 int main(const int argc, char* const* argv);
@@ -77,8 +81,8 @@ int main (const int argc, char* const* argv) {
   timetag << ptm->tm_year+1900 << "_" << ptm->tm_mon+1 << "_" << ptm->tm_mday << "_" << ptm->tm_hour << "_" << ptm->tm_min;
 
   // set default variables
-  releasedOutPath = "diff_release_" + timetag.str() + ".txt";
-  stateOutPath = "diff_state_.txt_" + timetag.str() + ".txt";
+  releasedPath = "diff_release_" + timetag.str() + ".txt";
+  statePath = "diff_state_" + timetag.str() + ".txt";
   h = 0.9;
   n = 32;
   iterationCount = 100;
@@ -100,15 +104,15 @@ int main (const int argc, char* const* argv) {
   pd = 0.1;
   pe = 1.0 - pd - pp;
 
-  FILE* releasedOut = fopen(releasedOutPath.c_str(), "w");
+  FILE* releasedOut = fopen(releasedPath.c_str(), "w");
   if (releasedOut == NULL) {
     printf("error opening release curve output file, exiting!\n");
     return 1;
   }
 
   FILE* stateOut;
-  if (stateOutPeriod > 0) {
-    stateOut = fopen(stateOutPath.c_str(), "w");
+  if (statePeriod > 0) {
+    stateOut = fopen(statePath.c_str(), "w");
     if (stateOut == NULL) {
       printf("error opening state output file, exiting!\n");
       return 1;
@@ -147,7 +151,6 @@ int main (const int argc, char* const* argv) {
   mvprintw(4, 0, "                                                                            ");
   refresh();
 	
-	
   int step = 0;
   u32 frameStep = 0;
   u8 halt = 0;
@@ -157,14 +160,26 @@ int main (const int argc, char* const* argv) {
   while(halt == 0)    {
     step++;
     frameStep++;
+    stateStep++;
 
     if ( step == iterationCount ) {
       halt = HALT_MAX_ITERATIONS;
     }
 
-    if(frameStep == frameCount) {
+    if( frameStep == framePeriod ) {
       printFrame(&model, frameNum);
       frameStep = 0;
+    }
+
+    if( stateStep == statePeriod ) {
+      // print model state data
+      u64 cell;
+      for(cell = 0; cell<model.numCells; cell++) {
+	fprintf(stateOut, "\n%i", model.cells[cell]->state);
+	fprintf(stateOut, "\t%f", model.cells[cell]->concentration[0]);
+	fprintf(stateOut, "\t%f", model.cells[cell]->concentration[1]);
+      }
+      stateStep = 0;
     }
 					
     released[1] = model.iterate();
@@ -208,7 +223,7 @@ int main (const int argc, char* const* argv) {
   getchar();
 
   fclose(releasedOut);
-  if(stateOutPeriod > 0) {
+  if(statePeriod > 0) {
     fclose(stateOut);
   }
   end_graphics(); 
@@ -256,14 +271,14 @@ int parse_args(const int argc, char* const* argv) {
       {"stateperiod", required_argument, 0, 't'},
       {"nochangecount", required_argument, 0, 'd'},
       {"seed", required_argument, 0, 'e'},
-
+      {"asciiperiod", required_argument, 0, 'a'},
       {0, 0, 0, 0}
     };
 
   int opt = 0;
   int opt_idx = 0;
   while (1) {
-    opt = getopt_long(argc, argv, "n:c:p:h:r:s:t:d:",
+    opt = getopt_long(argc, argv, "n:c:p:h:r:s:t:d:e:a:",
 			 long_options, &opt_idx);
     if (opt == -1) { break; }
 
@@ -281,19 +296,22 @@ int parse_args(const int argc, char* const* argv) {
       h = atof(optarg);
       break;
     case 'r' :
-      releasedOutPath = optarg;
+      releasedPath = optarg;
       break;
     case 's':
-     stateOutPath = optarg;
+     statePath = optarg;
      break;
     case 't':
-      stateOutPeriod = atoi(optarg);
+      statePeriod = atoi(optarg);
       break;
     case 'd':
       noChangeCountThresh = atoi(optarg);
       break;
     case 'e':
       seed = atoi(optarg);
+      break;
+    case 'a':
+      framePeriod = atoi(optarg);
       break;
     default:
       break;

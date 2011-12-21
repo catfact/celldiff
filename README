@@ -1,3 +1,4 @@
+
 celldiff arguments
 
 -n, --cubelength     : number of cells on each side of cube
@@ -8,4 +9,23 @@ celldiff arguments
 -s, --statefile      : filename for exporting full state data. defaults to a timestamped name
 -t, --stateperiod    : how often to export full state data. 
 -d, --nochangecount  : how many consecutive unchanging iterations before halting
--e, --seed           : random number seed (unigned integer)
+-e, --seed           : random number seed (unsigned integer)
+-a, --asciiperiod    : set the frame period in iterations for drawing ascii animation
+
+the ratio of released drug mass is printed as newline-separated values to the specified file path.
+
+the model's state is printed in a multi-column format. rows are separated by newlines, columns by tabs. layout as follows:
+
+first column : cell state as follows:
+      	       	    0 = drug,
+		    1 = excipient, 
+		    2 = drug dissolving,
+		    3 = excipient dissolving
+		    4 = fully wetted
+		    5 = polymer
+		    6 = void
+		    7 = boundary (zero concentration)
+
+second column : drug concentration
+
+third column : excipient concentration

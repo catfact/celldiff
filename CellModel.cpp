@@ -29,28 +29,27 @@ Cell::~Cell() {
 //================================================================
 // ===== CellModel
 
+
+///!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+///!!!!!!!!!!! tweakable: 
 //// constant diffusion multiplier given count of poly neighbors
 const f64 CellModel::diffNMul[7] = {
-  1.0,
-  0.9,
-  0.1,
-  0.01,
-  0.001,
-  0.0,
-  0.0
+  // 1.0, 0.9, 0.1, 0.01, 0.001, 0.0, 0.0
+  1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0
 };
 
 //// constant dissolution steps given count of poly neighbors
 const f64 CellModel::dissNSteps[7] = {
-  1, 50, 100, 100, 200, 400, 800
+  //  1, 50, 100, 100, 200, 400, 800
+  1, 1, 1, 1, 1, 1, 1
 };
+//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 // index <-> coordinate conversion
 u32 CellModel::subToIdx(const u32 x,
                         const u32 y, 
                         const u32 z) {
-  //  return z*n*n + y*n + x;
-  return cubeLength*(z*cubeLength + y) + x;
+   return cubeLength*(z*cubeLength + y) + x;
 }
 
 void CellModel::idxToSub(u32 idx, 
@@ -395,9 +394,6 @@ void CellModel::setup(void) {
       //    int dum=0;
       // dum++;
     }
- 
-      // printf("{ %d, %d } ; ", (int)numCellsToProcess, (int)cells[i]->idx);
-    
   }
     
   // initialize the update data
@@ -455,7 +451,6 @@ eCellState CellModel::dissolve(const Cell* const cell) {
 eCellState CellModel::continueDissolve(const Cell* const cell) {
   cellsUpdate[cell->idx]->dissCount++;
   // FIXME: (?) careful, this concentration index is a nasty enum hack
-  
   cellsUpdate[cell->idx]->concentration[cell->state - 2] = cells[cell->idx]->concentration[cell->state - 2] + cell->dissInc;
   if(cellsUpdate[cell->idx]->dissCount >= cell->dissSteps) {
     cellsUpdate[cell->idx]->state = eStateWet;
@@ -492,11 +487,7 @@ void CellModel::diffuse(const Cell* const cell) {
  //   + (dEx * nw / cellLength2 * (cMeanEx - cell->concentration[eStateEx]) * dt);
  
  // refactored:
-	
-
-  
-  // FIXME: still not sure how to apply poly-neighbors-diffusin-multiplier...
-    const f64 tmp = nw * dt_l2;
+  const f64 tmp = nw * dt_l2;
   const f64 drugDiff = (dDrug * tmp * (cMeanDrug - cell->concentration[eStateDrug] * cell->diffMul));  
 
 // drugMass += drugDiff;
@@ -555,6 +546,7 @@ f64 CellModel::iterate(void) {
   // FIXME: memcpy() in this function is eating 20% of CPU time.
   // should be able to just swap pointers somehow...
 
+  // (this is not cutting it)
   /*
   Cell** cellsTmp = cells;
   cells = cellsUpdate;
