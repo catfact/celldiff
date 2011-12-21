@@ -97,7 +97,6 @@ int main (const int argc, char* const* argv) {
 
   frameNum = n / 2;
   
-
   start_graphics();
   
   // finish setting up variables

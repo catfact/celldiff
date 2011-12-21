@@ -29,3 +29,8 @@ first column : cell state as follows:
 second column : drug concentration
 
 third column : excipient concentration
+
+example: 64 steps on a side, 1000 iterations, output state every 100 iterations:
+
+./celldiff -n64 -c1000 -r100
+
