@@ -11,10 +11,12 @@ celldiff arguments
 -d, --nochangecount  : how many consecutive unchanging iterations before halting
 -e, --seed           : random number seed (unsigned integer)
 -a, --asciiperiod    : set the frame period in iterations for drawing ascii animation
+-o, --dissdenom      : set the dissolution probability scale, e.g. the probability of dissolving is multiplied by o
+-i, --disspolyscale  : set the scaling of polymer percent / dissolution probability denominator
 
 the ratio of released drug mass is printed as newline-separated values to the specified file path.
 
-the model's state is printed in a multi-column format. rows are separated by newlines, columns by tabs. layout as follows:
+the model's state is printed in a multi-column format. rows are separated by newlines, columns by tabs. layout is as follows:
 
 first column : cell state as follows:
       	       	    0 = drug,
@@ -32,5 +34,5 @@ third column : excipient concentration
 
 example: 64 steps on a side, 1000 iterations, output state every 100 iterations:
 
-./celldiff -n64 -c1000 -s100
+./celldiff -n64 -c1000 -t100
 

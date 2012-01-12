@@ -100,7 +100,9 @@ CellModel::CellModel(
                      f64 dT,
                      f64 ddrug,
                      f64 dex,
-                     u32 seed
+                     u32 seed,
+					 f64 dprob,
+					 f64 dpolyscale
 		     ) :
 #if USE_BOOST
   rngEngine(), rngDist(0.f, 1.f),
@@ -134,6 +136,8 @@ CellModel::CellModel(
   rngEngine.seed(seed);
   rngGen = new boost::variate_generator<rng_t, dist_t> (rngEngine, rngDist);
 #endif
+	dissprob = dprob / NUM_NEIGHBORS;
+	disspolyscale = dpolyscale;
 }
 
 //------ d-tor
@@ -168,7 +172,9 @@ void CellModel::setup(void) {
   cubeR2 = (cX-1) * (cX-1);
   eCellState swapstate;
 
+  // number of cells in cylinder height
   numH = cylinderHeight * cubeLength;
+	
 	
   // offset coordinates to get diagonals in 2x2x2
   const u8 diags[4][3]	= { {0, 0, 0}, {0, 1, 1}, {1, 0, 1}, {1, 1, 0} };
@@ -390,9 +396,13 @@ void CellModel::setup(void) {
       cells[i]->diffMul = diffNMul[np];
       cells[i]->dissSteps = dissNSteps[np];
       cells[i]->dissInc = 1.0 / (f64)(cells[i]->dissSteps);
-      ///// DEBUG
-      //    int dum=0;
-      // dum++;
+		
+		//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+		// scale this cell's dissolution probabilty by NPN.. 
+		// something like this?
+		const f64 npscale = ((NUM_NEIGHBORS - np) / NUM_NEIGHBORS);
+		cells[i]->dissProb = (dissprob * npscale * disspolyscale) + (dissprob * (1.0 - disspolyscale));
+		//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     }
   }
     
@@ -428,7 +438,8 @@ eCellState CellModel::dissolve(const Cell* const cell) {
   }
   
   // dissolve randomly
-  if (getRand() < ((nw - sumC) / (float)DISS_DENOM)) {
+//  if (getRand() < ((nw - sumC) / (float)DISS_DENOM)) {
+	  if (getRand() < ((nw - sumC) * cell->dissProb)) {
     if (cell->state == eStateDrug) {
       cellsUpdate[cell->idx]->state = eStateDissDrug;
       cellsUpdate[cell->idx]->dissCount = 0;

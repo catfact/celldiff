@@ -51,6 +51,10 @@ static u32 statePeriod = 0;
 static u32 stateStep = 0;
 // ascii output toggle
 static u32 asciiout = 1;
+// dissolution probability scale (denominator == dissprob * numneighbors)
+static f64 dissprob = 1;
+// dissolution prob / polymer correlation factor
+static f64 disspolyscale = 0.0;
 
 //============== function declarations
 int main(const int argc, char* const* argv);
@@ -129,9 +133,11 @@ int main (const int argc, char* const* argv) {
 		  0.001,  // cell size
 		  0.001,  // time step
 		  7e-6,   // drug diffusion constant
-		  7e-6,   // excipient diffusion constant
-		  seed     // RNG seed
-		  );
+		  7e-6,          // excipient diffusion constant
+		  seed,          // RNG seed,
+		  dissprob,    // dissolution probability scale
+	      disspolyscale // dissolution probability -> polymer correlation factor
+  );
 	
   mvprintw(0, 0, "cube width %i, pd: %f, pe: %f, pp: %f\n\n", (int)n, pd, pe, pp);
   mvprintw(1, 0, "initializing...");
@@ -276,13 +282,15 @@ int parse_args(const int argc, char* const* argv) {
       {"nochangecount", required_argument, 0, 'd'},
       {"seed", required_argument, 0, 'e'},
       {"asciiperiod", required_argument, 0, 'a'},
+      {"dissdenom", required_argument, 0, 'o'},
+      {"disspolyscale", required_argument, 0, 'i'},
       {0, 0, 0, 0}
     };
 
   int opt = 0;
   int opt_idx = 0;
   while (1) {
-    opt = getopt_long(argc, argv, "n:c:p:h:r:s:t:d:e:a:",
+    opt = getopt_long(argc, argv, "n:c:p:h:r:s:t:d:e:a:o:i:",
 			 long_options, &opt_idx);
     if (opt == -1) { break; }
 
@@ -316,7 +324,13 @@ int parse_args(const int argc, char* const* argv) {
       break;
     case 'a':
       framePeriod = atoi(optarg);
-      break;
+	  break;
+	case 'o':
+	  dissprob = atof(optarg);
+	  break;
+	case 'i':
+	  disspolyscale = atof(optarg);
+	  break;
     default:
       break;
     }

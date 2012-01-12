@@ -35,11 +35,6 @@
 #define NUM_NEIGHBORS 6
 #endif 
 
-//------- dissolution constants
-// This could be a function of the number of polymer neighbors.
-#define DISS_DENOM 100
-
-
 //======= types
 // enumeration of cell states
 enum eCellState {
@@ -77,6 +72,8 @@ public:
   f64 dissInc;
   // diffusion multiplier
   f64 diffMul;
+	// dissolution probability for this cell (function of NPN)
+	f64 dissProb;
 
 };
 
@@ -91,7 +88,10 @@ public:
 	    f64 dT,
 	    f64 ddrug=7e-6,
 	    f64 dex=7e-6,
-	    u32 seed=47u);
+	    u32 seed=47u,
+	    f64 diss=1.0,
+	    f64 disspoly=0.0
+  );
   ~CellModel(void);
   // set initial values, tablet shape, etc
   void setup(void);
@@ -142,6 +142,10 @@ public: // FIXME: many of these could be privatized
   f64 trappedDrugMass;
   // a common intermediate multiplier
   f64 dt_l2;
+	// base dissolution probability
+	f64 dissprob;
+	// dissolution probability / NPN weighting
+	f64 disspolyscale;
   // diffusion weights given number of polymer neighbors
   static const f64 diffNMul[7];
   // dissolution steps given number of polymer neighbors
