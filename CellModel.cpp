@@ -41,8 +41,8 @@ const f64 CellModel::diffNMul[7] = {
 //// constant dissolution steps given count of poly neighbors
 const f64 CellModel::dissNSteps[7] = {
   //  1, 50, 100, 100, 200, 400, 800
-  // 1, 1, 1, 1, 1, 1, 1
-	10, 10, 10, 10, 10, 10, 10
+  1, 1, 1, 1, 1, 1, 1
+	// 50, 50, 50, 50, 50, 50, 50
 };
 //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -203,7 +203,6 @@ void CellModel::setup(void) {
 	} // end edge branch
 	else {
 	  r2 = (i-cX+1)*(i-cX+1) + (j-cY+1)*(j-cY+1);
-	  // TODO!!!  check cylinder height 
 	  if((r2 < cubeR2) && (k <= (numH))) {
 						
 	    rnd = getRand();
@@ -409,7 +408,8 @@ eCellState CellModel::dissolve(const Cell* const cell) {
   u8 nw = 0;      // number of wet neighbors
   u8 np = 0;      // number of polymer neighbors 
   f64 sumC = 0.f; // sum of neighbor concentrations
-	
+
+	// count the wet/boundary neighbors
   for(u8 i = 0; i < NUM_NEIGHBORS; i++) {
     if ((cells[cell->neighborIdx[i]]->state == eStateWet) || (cells[cell->neighborIdx[i]]->state == eStateBound)) {
       nw++;
@@ -422,15 +422,13 @@ eCellState CellModel::dissolve(const Cell* const cell) {
 	
   // compare dry-neighbor states with this cell's state
   for(u8 i = 0; i < NUM_NEIGHBORS; i++) {
-    if (cells[cell->neighborIdx[i]]->state == cell->state) {
-      // FIXME: this seems dumb, dry cells always have conc. == 1.f ?
+    if (cells[cell->neighborIdx[i]]->state == eStateWet) {
       sumC += cells[cell->neighborIdx[i]]->concentration[cell->state];
     }
   }
-    
   
   // dissolve randomly
-  if (getRand() < ((nw - sumC) / DISS_DENOM)) {
+  if (getRand() < ((nw - sumC) / (float)DISS_DENOM)) {
     if (cell->state == eStateDrug) {
       cellsUpdate[cell->idx]->state = eStateDissDrug;
       cellsUpdate[cell->idx]->dissCount = 0;
@@ -465,13 +463,12 @@ void CellModel::diffuse(const Cell* const cell) {
   f64 cMeanDrug = 0.f;
   f64 cMeanEx = 0.f;
   u8 nw = 0;
-  u8 np = 0;
 	
   for(u8 i=0; i<NUM_NEIGHBORS; i++) {
     if ((cells[cell->neighborIdx[i]]->state == eStateWet) || (cells[cell->neighborIdx[i]]->state == eStateBound)) {
       nw++;
-      cMeanDrug += cells[cell->neighborIdx[i]]->concentration[eStateDrug] * cells[cell->neighborIdx[i]]->diffMul;
-      cMeanEx += cells[cell->neighborIdx[i]]->concentration[eStateEx] * cells[cell->neighborIdx[i]]->diffMul;
+		cMeanDrug += cells[cell->neighborIdx[i]]->concentration[eStateDrug];
+		cMeanEx += cells[cell->neighborIdx[i]]->concentration[eStateEx];
     }
   }
   // no wet neighbors => no effect
@@ -490,8 +487,6 @@ void CellModel::diffuse(const Cell* const cell) {
  // refactored:
   const f64 tmp = nw * dt_l2;
   const f64 drugDiff = (dDrug * tmp * (cMeanDrug - cell->concentration[eStateDrug] * cell->diffMul));  
-
-// drugMass += drugDiff;
 	
   cellsUpdate[cell->idx]->concentration[eStateDrug] = cell->concentration[eStateDrug] + drugDiff;
 	
@@ -516,7 +511,10 @@ f64 CellModel::iterate(void) {
       // shouldn't get here!
       // polymer cells: no change
       break;
-      */
+	   */
+	case eStateWet:
+		diffuse(cell);
+		break;
     case eStateVoid:
       // void cells: deissolve (FIXME?)
       dissolve(cell);
@@ -530,12 +528,11 @@ f64 CellModel::iterate(void) {
     case eStateDissEx:
       continueDissolve(cell);
       break;
-    case eStateWet:
-      diffuse(cell);
-      break;
+			/*
     case eStateBound:
       cell->concentration[0] = 0.f;
       cell->concentration[1] = 0.f;
+			 */
     default:
       break;
     }

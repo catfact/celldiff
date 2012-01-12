@@ -26,7 +26,7 @@ using namespace std;
 static f64 noChangeMassThresh = 0.00001;
 static u32 noChangeCountThresh = 100;
 // length of cube
-static u32 n = 64;
+static u32 n = 32;
 // current iteration count
 static u32 iterationCount = 0;
 // current animation frame step
@@ -83,10 +83,11 @@ int main (const int argc, char* const* argv) {
   // set default variables
   releasedPath = "diff_release_" + timetag.str() + ".txt";
   statePath = "diff_state_" + timetag.str() + ".txt";
-  h = 0.9;
-  n = 32;
   iterationCount = 100;
 
+	
+	frameNum = 6;
+	
   // return something if --help passed?
   int parsed = parse_args(argc, argv);
 
@@ -95,7 +96,6 @@ int main (const int argc, char* const* argv) {
     //  return 0;
   }
 
-  frameNum = n / 2;
   
   start_graphics();
   
@@ -171,15 +171,20 @@ int main (const int argc, char* const* argv) {
     }
 
     if( stateStep == statePeriod ) {
-      // print model state data
-      u64 cell;
-      for(cell = 0; cell<model.numCells; cell++) {
-	fprintf(stateOut, "\n%i", model.cells[cell]->state);
-	fprintf(stateOut, "\t%f", model.cells[cell]->concentration[0]);
-	fprintf(stateOut, "\t%f", model.cells[cell]->concentration[1]);
-      }
       stateStep = 0;
     }
+	  
+	  
+	  if( (stateStep == 1) && (statePeriod != 0) ) {
+		  // print model state data
+		  u64 cell;
+		  for(cell = 0; cell<model.numCells; cell++) {
+			  fprintf(stateOut, "\n%i", model.cells[cell]->state);
+			  fprintf(stateOut, "\t%f", model.cells[cell]->concentration[0]);
+			  fprintf(stateOut, "\t%f", model.cells[cell]->concentration[1]);
+		  }
+
+	  }
 					
     released[1] = model.iterate();
     dr = released[1] - released[0];

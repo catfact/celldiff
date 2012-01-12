@@ -36,17 +36,9 @@
 #endif 
 
 //------- dissolution constants
-// MATLAB and the paper characterize this as some function of neighbors-with-polymer...
-// but in the MATLAB code it is constant
-// (is it supposed to be == number of neighbors ?)
-#define DISS_DENOM 6
-// FIXME: this gradual dissolution is described in the paper,
-// but in the MATLAB program it seems to always occur in a single iteration.
-// so i'm making an arbitrary assumption here:
-// number of dissolution steps
-// #define DISS_STEPS 5
-// amount by which drug/excip concentration increases per dissolution step
-// #define DISS_INC 0.2
+// This could be a function of the number of polymer neighbors.
+#define DISS_DENOM 100
+
 
 //======= types
 // enumeration of cell states
