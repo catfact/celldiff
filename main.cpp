@@ -36,7 +36,7 @@ static u32 framePeriod = 1;
 // current index of animation slice
 static u32 frameNum = 0;
 // concentrations
-static f64 pd=0.1, pe=0.5, pp=0.4;
+static f64 pd=0.1, pp=0.4;
 // cylinder height
 static f64 h=0.23;
 // RNG seed
@@ -55,6 +55,10 @@ static u32 asciiout = 1;
 static f64 dissprob = 1;
 // dissolution prob / polymer correlation factor
 static f64 disspolyscale = 0.0;
+// width of polymer shell
+static u32 shellWidth = 1;
+// polymer-shell "imbalance factor"
+static f64 polyShellBalance = 2.f;
 
 //============== function declarations
 int main(const int argc, char* const* argv);
@@ -105,7 +109,6 @@ int main (const int argc, char* const* argv) {
   
   // finish setting up variables
   pd = 0.1;
-  pe = 1.0 - pd - pp;
 
   FILE* releasedOut = fopen(releasedPath.c_str(), "w");
   if (releasedOut == NULL) {
@@ -128,18 +131,19 @@ int main (const int argc, char* const* argv) {
 		  n,      // cube width,
 		  h,     // cylinder height
 		  pd,    // p drug
-		  pe,    // p excipient
 		  pp,    // p polymer
 		  0.001,  // cell size
 		  0.001,  // time step
 		  7e-6,   // drug diffusion constant
 		  7e-6,          // excipient diffusion constant
 		  seed,          // RNG seed,
-		  dissprob,    // dissolution probability scale
-	      disspolyscale // dissolution probability -> polymer correlation factor
+		  dissprob,    // dissolution probability scale,
+      disspolyscale, // dissolution probability -> polymer correlation factor,
+      shellWidth,
+      polyShellBalance
   );
 	
-  mvprintw(0, 0, "cube width %i, pd: %f, pe: %f, pp: %f\n\n", (int)n, pd, pe, pp);
+  mvprintw(0, 0, "cube width %i, pd: %f, pp: %f\n\n", (int)n, pd, pp);
   mvprintw(1, 0, "initializing...");
   refresh();	
   model.setup();
