@@ -27,12 +27,7 @@ void CellModel::distribute(void) {
   u32 edgeR2;   // squared radius at the inner edge of the shell
   u32 r2;       // temp squared radius
   u32 dcX, dcY; // temp distance from center, cartesian
-  
-  f64 rnd;      // temp random
   u32 idx;      // temp idx
-  u32 nIdx;     // neighbor 
-  u32 nIdx2;    // swap neighbor
-  u8 l, m, n;   // cartesian neighbor idx
   u32 numH;     // cylinder height (in cells)
   u32 edgeH;     // edge height
   
@@ -64,17 +59,9 @@ void CellModel::distribute(void) {
             || (j > (cubeLength-3))
             || (k > (cubeLength-3))
           || (r2 >= cubeR2) ) {
-            // exterior cells2
-            // fill the whole 2x2x2
-            for(l=0; l<2; l++) {
-              for(m=0; m<2; m++) {
-                for(n=0; n<2; n++) {
-                  nIdx = subToIdx(i+l, j+m, k+n);
-                  cells[nIdx]->state = eStateBound;
-                }
-              }
-            }
-          } // end outside-cylinder
+          // exterior cells
+          setBlockState(i, j, k, eStateBound);
+        } // end outside-cylinder
         else { 
           if((r2 > edgeR2) || (k < wShell) || (k > edgeH)) {
             shellIdx.push_back(idx);
@@ -86,14 +73,49 @@ void CellModel::distribute(void) {
     } // j
   } // i
   
-  // distribute polymer cells
+  // shuffle the shell and tablet idx's 
+  random_shuffle(shellIdx.begin(), shellIdx.end());
+  random_shuffle(tabletIdx.begin(), tabletIdx.end());
+  
+  ///// distribute polymer cells
+  // in shell
   u32 nPolyInShell = (u32)( (f64)(shellIdx.size()) * (f64)nPoly / (f64)(shellIdx.size() + tabletIdx.size()) * pShellB );
-  
-  
+  u32 pi;
+  for(pi=0; pi < nPolyInShell; pi++) {
+    polyIdx[pi] = shellIdx.back();
+    shellIdx.pop_back();
+  }
+  // in tableta
+  for(pi=nPolyInShell; pi < nPoly; pi++) {
+    polyIdx[pi] = tabletIdx.back();
+    tabletIdx.pop_back();
+  }
+  // reassign all remaining shell idx's to tablet
+  for(u32 n=0; n<shellIdx.size(); n++) {
+    tabletIdx.push_back(shellIdx.back());
+    shellIdx.pop_back();
+  }
+  //// distribute drug cells (shell and tablet);
+  //// all remaining shell+tablet idx's get excipient
   delete polyIdx;
   delete drugIdx;
+  delete excipIdx;
   
 }
 
 void CellModel::compress(void) {
+}
+
+// utility to set state of a 2x2x2 block of cells
+void CellModel::setBlockState(const u32 i, const u32 j, const u32 k, const eCellState state) {
+  u32 nIdx;
+  u8 l, m, n;
+  for(l=0; l<2; l++) {
+    for(m=0; m<2; m++) {
+      for(n=0; n<2; n++) {
+        nIdx = subToIdx(i+l, j+m, k+n);
+        cells[nIdx]->state = eStateBound;
+      }
+    }
+  }
 }

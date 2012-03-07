@@ -121,13 +121,15 @@ numCellsToProcess(0),
 wShell(shellwidth),
 pShellB(polyshellbalance)
 {
-  nPoly = (u32)((f32)numCells * pPoly);
-  nDrug = (u32)((f32)numCells * pDrug);
-  nEx = numCells - nPoly - nDrug;
   
   cubeLength2 = cubeLength * cubeLength;
   numCells = cubeLength * cubeLength * cubeLength;
   dt_l2 = dt / (cellLength * cellLength);
+  
+  
+  nPoly = (u32)((f32)numCells * pPoly);
+  nDrug = (u32)((f32)numCells * pDrug);
+  nEx = numCells - nPoly - nDrug;
   
   cells =				new Cell* [numCells];
   cellsUpdate =		new Cell* [numCells];

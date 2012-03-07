@@ -11,8 +11,7 @@ all: celldiff
 CellModel.o: CellModel.cpp
 	$(CC) $(CFLAGS) $(INC) -c -o CellModel.o CellModel.cpp 
 	
-	
-CellModelSetup: CellModelSetup.cpp
+CellModelSetup.o: CellModelSetup.cpp
 	$(CC) $(CFLAGS) $(INC) -c -o CellModelSetup.o CellModelSetup.cpp 
 	
 main.o: main.cpp
