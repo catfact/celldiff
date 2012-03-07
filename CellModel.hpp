@@ -121,7 +121,7 @@ private:
   u32 subToIdx(const u32 x, const u32 y, const u32 z);
   void idxToSub(u32 idx, u32* pX, u32* pY, u32* pZ);
   // utility to set state of a 2x2x2 block of cells
-  void setBlockState(const u32 i, const u32 j, const u32 k, const eCellState state);
+  void setBlockState(const u32 idx, const eCellState state);
   // random number generation
   f64 getRand(void);
 	

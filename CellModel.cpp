@@ -126,10 +126,11 @@ pShellB(polyshellbalance)
   numCells = cubeLength * cubeLength * cubeLength;
   dt_l2 = dt / (cellLength * cellLength);
   
-  
-  nPoly = (u32)((f32)numCells * pPoly);
-  nDrug = (u32)((f32)numCells * pDrug);
-  nEx = numCells - nPoly - nDrug;
+  // calculate cell distribution..
+  // (divide by 8 because we're initially considering 2x2x2 blocks)
+  nPoly = (u32)((f32)numCells * pPoly * 0.125);
+  nDrug = (u32)((f32)numCells * pDrug * 0.125);
+//  nEx = numCells - nPoly - nDrug;
   
   cells =				new Cell* [numCells];
   cellsUpdate =		new Cell* [numCells];
