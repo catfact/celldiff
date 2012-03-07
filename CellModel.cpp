@@ -93,8 +93,8 @@ void CellModel::findNeighbors(Cell* cell) {
 CellModel::CellModel(
                      u32 n,
                      f64 h,
-                     f64 pDrug,
-                     f64 pPoly,
+                     f64 pdrug,
+                     f64 ppoly,
                      f64 cl,
                      f64 dT,
                      f64 ddrug,
@@ -119,6 +119,8 @@ trappedDrugMass(0.0),
 drugMass(0.0),
 numCellsToProcess(0),
 wShell(shellwidth),
+pPoly(ppoly),
+pDrug(pdrug),
 pShellB(polyshellbalance)
 {
   
@@ -128,8 +130,8 @@ pShellB(polyshellbalance)
   
   // calculate cell distribution..
   // (divide by 8 because we're initially considering 2x2x2 blocks)
-  nPoly = (u32)((f32)numCells * pPoly * 0.125);
-  nDrug = (u32)((f32)numCells * pDrug * 0.125);
+  // nPoly = (u32)((f32)numCells * pPoly * 0.125);
+  // nDrug = (u32)((f32)numCells * pDrug * 0.125);
 //  nEx = numCells - nPoly - nDrug;
   
   cells =				new Cell* [numCells];

@@ -127,9 +127,11 @@ private:
 	
 public: // FIXME: many of these could be privatized
 	// cell type distribution
-  u32 nDrug;
-  u32 nEx;
-  u32 nPoly;
+  //  u32 nDrug;
+  // u32 nEx;
+  // u32 nPoly;
+  f64 pPoly;
+  f64 pDrug;
   // diffusion constants
   f64 dDrug;
   f64 dEx;

@@ -32,6 +32,8 @@ void CellModel::distribute(void) {
   u32 idx;      // temp idx
   u32 numH;     // cylinder height (in cells)
   u32 edgeH;     // edge height
+
+  u32 nPoly, nDrug;
   
   vector<u32> shellIdx;   // cell idx's adjoining boundary
   vector<u32> tabletIdx;  // cell idx's inside cylinder
@@ -84,8 +86,15 @@ void CellModel::distribute(void) {
   
   ///// distribute polymer cells
   // in shell
-  nPoly = 
-  u32 nPolyInShell = (u32)( (f64)(shellIdx.size()) * (f64)nPoly / (f64)(shellIdx.size() + tabletIdx.size()) * pShellB );
+  numCellsToProcess = shellIdx.size() + tabletIdx.size();
+  nPoly = (u32)((f64)numCellsToProcess * pPoly);
+  nDrug = (u32)((f64)numCellsToProcess * pDrug);
+  // convert from 2x2x2x blocks
+  numCellsToProcess *= 8;
+  u32 nPolyInShell = (u32)( (f64)shellIdx.size() / (f64)numCellsToProcess * nPoly * pShellB);
+
+  if(nPolyInShell > shellIdx.size()) { nPolyInShell = shellIdx.size(); }
+
   u32 n;
   for(n=0; n < nPolyInShell; n++) {
     polyIdx.push_back(shellIdx.back());
