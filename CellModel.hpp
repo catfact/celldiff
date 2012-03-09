@@ -163,7 +163,7 @@ public: // FIXME: many of these could be privatized
   // shell width in cells
   u32 wShell;
   // polymer-shell "imbalance factor"
-  f64 pShellB;
+  f64 pShellBalance;
   // diffusion weights given number of polymer neighbors
   static const f64 diffNMul[7];
   // dissolution steps given number of polymer neighbors

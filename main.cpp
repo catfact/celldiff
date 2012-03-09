@@ -56,9 +56,9 @@ static f64 dissprob = 1;
 // dissolution prob / polymer correlation factor
 static f64 disspolyscale = 0.0;
 // width of polymer shell
-static u32 shellWidth = 1;
+static u32 polyShellWidth = 1;
 // polymer-shell "imbalance factor"
-static f64 polyShellBalance = 2.f;
+static f64 polyShellBalance = 0.5;
 
 //============== function declarations
 int main(const int argc, char* const* argv);
@@ -103,6 +103,8 @@ int main (const int argc, char* const* argv) {
     // print help message and return
     //  return 0;
   }
+  
+  frameNum = n >> 1;
 
   
   start_graphics();
@@ -138,9 +140,9 @@ int main (const int argc, char* const* argv) {
 		  7e-6,          // excipient diffusion constant
 		  seed,          // RNG seed,
 		  dissprob,    // dissolution probability scale,
-      disspolyscale, // dissolution probability -> polymer correlation factor,
-      shellWidth,
-      polyShellBalance
+          disspolyscale, // dissolution probability -> polymer correlation factor,
+          polyShellWidth,       // shell width
+          polyShellBalance  // shell balance
   );
 	
   mvprintw(0, 0, "cube width %i, pd: %f, pp: %f\n\n", (int)n, pd, pp);
@@ -276,25 +278,27 @@ static void end_graphics(void) {
 int parse_args(const int argc, char* const* argv) {
 
   static struct option long_options[] = {
-      {"cubelength", required_argument, 0, 'n'}, 
-      {"maxiterations", required_argument, 0, 'c'},
-      {"polymer", required_argument, 0, 'p'},
-      {"cylinderheight", required_argument, 0, 'h'},
-      {"releasedfile", required_argument, 0, 'r'},
-      {"statefile", required_argument, 0, 's'},
-      {"stateperiod", required_argument, 0, 't'},
-      {"nochangecount", required_argument, 0, 'd'},
-      {"seed", required_argument, 0, 'e'},
-      {"asciiperiod", required_argument, 0, 'a'},
-      {"dissdenom", required_argument, 0, 'o'},
-      {"disspolyscale", required_argument, 0, 'i'},
+      {"cubelength",      required_argument, 0, 'n'}, 
+      {"maxiterations",		required_argument, 0, 'c'},
+      {"polymer",         required_argument, 0, 'p'},
+      {"cylinderheight",	required_argument, 0, 'h'},
+      {"releasedfile",		required_argument, 0, 'r'},
+      {"statefile",       required_argument, 0, 's'},
+      {"stateperiod",     required_argument, 0, 't'},
+      {"nochangecount",		required_argument, 0, 'd'},
+      {"seed",            required_argument, 0, 'e'},
+      {"asciiperiod",     required_argument, 0, 'a'},
+      {"dissdenom",       required_argument, 0, 'o'},
+      {"disspolyscale",		required_argument, 0, 'i'},
+      {"polyshellwidth",	required_argument, 0, 'w'},
+      {"polyshellbalance",required_argument, 0, 'b'},
       {0, 0, 0, 0}
     };
 
   int opt = 0;
   int opt_idx = 0;
   while (1) {
-    opt = getopt_long(argc, argv, "n:c:p:h:r:s:t:d:e:a:o:i:",
+    opt = getopt_long(argc, argv, "n:c:p:h:r:s:t:d:e:a:o:i:w:b:",
 			 long_options, &opt_idx);
     if (opt == -1) { break; }
 
@@ -334,6 +338,12 @@ int parse_args(const int argc, char* const* argv) {
 	  break;
 	case 'i':
 	  disspolyscale = atof(optarg);
+	  break;
+	case 'w':
+	  polyShellWidth = atoi(optarg);
+      break;
+	case 'b':
+	  polyShellBalance = atof(optarg);
 	  break;
     default:
       break;
