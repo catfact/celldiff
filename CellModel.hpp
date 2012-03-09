@@ -79,26 +79,34 @@ public:
 
 class CellModel {
 public:
-  CellModel(u32 n,
+  CellModel(
+      u32 n,
 	    f64 h,
 	    f64 pDrug,
-	    f64 pEx,
 	    f64 pPoly,
 	    f64 cellW,
 	    f64 dT,
-	    f64 ddrug=7e-6,
-	    f64 dex=7e-6,
-	    u32 seed=47u,
-	    f64 diss=1.0,
-	    f64 disspoly=0.0
+      f64 ddrug=7e-6,
+      f64 dex=7e-6,
+      u32 seed=47u,
+      f64 diss=1.0,
+      f64 disspoly=0.0,
+      u32 shellWidth=1,
+      f64 polyshellbalance=2.0
   );
   ~CellModel(void);
   // set initial values, tablet shape, etc
   void setup(void);
+  ///// more setup funxtions...
+  // initial distribution of particlrd
+  void distribute(void);
+  // compression step
+  void compress(void);
+  
   // advance time in the model by one step
   f64 iterate(void);
 private:
-  // populate neighbor index array for a given cell
+  // paopulate neighbor index array for a given cell
   void findNeighbors(Cell* cell);
   // decide whether to dissolve given cell; return new state
   eCellState dissolve(const Cell* const cell);
@@ -112,14 +120,18 @@ private:
   // index / coordinates conversion
   u32 subToIdx(const u32 x, const u32 y, const u32 z);
   void idxToSub(u32 idx, u32* pX, u32* pY, u32* pZ);
+  // utility to set state of a 2x2x2 block of cells
+  void setBlockState(const u32 idx, const eCellState state);
   // random number generation
   f64 getRand(void);
 	
 public: // FIXME: many of these could be privatized
 	// cell type distribution
-  f64 pDrug;
-  f64 pEx;
+  //  u32 nDrug;
+  // u32 nEx;
+  // u32 nPoly;
   f64 pPoly;
+  f64 pDrug;
   // diffusion constants
   f64 dDrug;
   f64 dEx;
@@ -130,6 +142,8 @@ public: // FIXME: many of these could be privatized
   // number of cells on each side of space
   u32 cubeLength;
   u32 cubeLength2;
+  // shell width
+  u32 shellN;
   // cylinder height as fraction of cube height
   f64 cylinderHeight;
   // number of total cells
@@ -146,6 +160,10 @@ public: // FIXME: many of these could be privatized
 	f64 dissprob;
 	// dissolution probability / NPN weighting
 	f64 disspolyscale;
+  // shell width in cells
+  u32 wShell;
+  // polymer-shell "imbalance factor"
+  f64 pShellB;
   // diffusion weights given number of polymer neighbors
   static const f64 diffNMul[7];
   // dissolution steps given number of polymer neighbors
