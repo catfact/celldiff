@@ -17,6 +17,7 @@
 //================================================================
 //======= Cell
 Cell::Cell(u32 i) {
+  state = eStateDummy;
   idx = i;
   concentration[0] = 0.f;
   concentration[1] = 0.f;

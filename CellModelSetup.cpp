@@ -16,7 +16,38 @@ using namespace std;
 
 //// top-level setup function. initializes cell type data
 void CellModel::setup(void) {
+  //////////// DEBUG
+  u32 stateCount[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+  u32 cellsInTablet = 0;
+  f64 drugCountRatio, polyCountRatio;
+  f64 exCountRatio, voidCountRatio;
+  u8 dum=0;
+  ////////////
+  
+  
+  
+  ///---- DISTRIBUTE
   this->distribute();
+  
+  
+  
+  ////////// DEBUG
+  // another loop over all cells to verify final cell distribution count
+  for(u8 s=0; s<8; s++) { stateCount[s] = 0; }
+  for (u32 n=0; n<numCells; n++) {
+    stateCount[cells[n]->state]++;
+  }
+  // easier-to-read totals
+  cellsInTablet   = stateCount[eStateDrug] + stateCount[eStateEx] + stateCount[eStatePoly] + stateCount[eStateVoid];
+  drugCountRatio  = (f64)stateCount[eStateDrug] / (f64)cellsInTablet;
+  polyCountRatio  = (f64)stateCount[eStatePoly] / (f64)cellsInTablet;
+  exCountRatio    = (f64)stateCount[eStateEx] / (f64)cellsInTablet;
+  voidCountRatio  = (f64)stateCount[eStateVoid] / (f64)cellsInTablet;
+  // debugger hook
+  dum++;
+  /////////////////
+  
+  //------- COMPRESS
   this->compress();
 	
 	// offset coordinates to get diagonals in 2x2x2
@@ -92,7 +123,22 @@ void CellModel::setup(void) {
 		*(cellsUpdate[i]) = *(cells[i]);
 	}
 	drugMass = drugMassTotal;
-	
+  
+  ////////// DEBUG
+  // another loop over all cells to verify final cell distribution count
+  for(u8 s=0; s<8; s++) { stateCount[s] = 0; }
+  for (u32 n=0; n<numCells; n++) {
+    stateCount[cells[n]->state]++;
+  }
+  // easier-to-read totals
+  cellsInTablet   = stateCount[eStateDrug] + stateCount[eStateEx] + stateCount[eStatePoly] + stateCount[eStateVoid];
+  drugCountRatio  = (f64)stateCount[eStateDrug] / (f64)cellsInTablet;
+  polyCountRatio  = (f64)stateCount[eStatePoly] / (f64)cellsInTablet;
+  exCountRatio    = (f64)stateCount[eStateEx] / (f64)cellsInTablet;
+  voidCountRatio  = (f64)stateCount[eStateVoid] / (f64)cellsInTablet;
+  // debugger hook
+  dum++;
+  /////////////////
   
 }
 
@@ -203,7 +249,8 @@ void CellModel::distribute(void) {
   }
   
   // reassign all remaining shell idx's to tablet
-  for(n=0; n<shellIdx.size(); n++) {
+  const u32 shells = shellIdx.size(); /// arg, classic
+  for(n=0; n<shells; n++) {
     tabletIdx.push_back(shellIdx.back());
     shellIdx.pop_back();
   }
@@ -217,7 +264,8 @@ void CellModel::distribute(void) {
     tabletIdx.pop_back();
   }
   //// everything else becomes excipient
-  for( n=0; n<tabletIdx.size(); n++) {
+  const u32 tablets = tabletIdx.size(); /// arg, classic
+  for( n=0; n<tablets; n++) {
     exIdx.push_back(tabletIdx.back());
     tabletIdx.pop_back();
   }

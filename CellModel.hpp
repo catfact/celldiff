@@ -45,7 +45,8 @@ enum eCellState {
   eStateWet       = 4,
   eStatePoly      = 5,
   eStateVoid      = 6,
-  eStateBound     = 7
+  eStateBound     = 7,
+  eStateDummy
 };
 
 //======= classes
