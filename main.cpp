@@ -59,8 +59,8 @@ static f64 disspolyscale = 0.0;
 static u32 polyShellWidth = 1;
 // polymer-shell "imbalance factor"
 static f64 polyShellBalance = 0.5;
-// boundary diffusion rate
-static f64 boundDiff = 0.02;
+// boundary decay factor
+static f64 boundDiff = 0.9;
 
 //============== function declarations
 int main(const int argc, char* const* argv);
@@ -370,7 +370,7 @@ void printFrame(CellModel* model, u32 slice) {
       idx = i*n*n + j*n + k;
       attron(COLOR_PAIR(model->cells[idx]->state + 1));
       if ((model->cells[idx]->state == eStateWet) || (model->cells[idx]->state == eStateBound) ) {
-        mvprintw(6+j, k * 2, "%d", (int)(model->cells[idx]->concentration[eStateDrug] * 99.0));
+        mvprintw(6+j, k * 2, "%d0", (int)(model->cells[idx]->concentration[eStateDrug] * 99.0));
       } else {
         // if(model->cells[idx]->state == eStateDummy) {
         //   mvprintw(6+j, k * 2, "XX", model->cells[idx]->state);

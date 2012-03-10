@@ -297,10 +297,11 @@ f64 CellModel::iterate(void) {
         break;
       case eStateBound:
         diffuse(cell);
-        cell->concentration[0] -= boundDiff;
-        cell->concentration[1] -= boundDiff;
-        if(cell->concentration[0] < 0.f) cell->concentration[0] = 0.f;
-        if(cell->concentration[1] < 0.f) cell->concentration[1] = 0.f;
+        cell->concentration[0] *= boundDiff; // exponential decay
+        cell->concentration[1] *= boundDiff;
+        // denormal and saturate low
+        if(cell->concentration[0] < 0.000000000001) cell->concentration[0] = 0.0;
+        if(cell->concentration[1] < 0.000000000001) cell->concentration[1] = 0.0;
         break;
       default:
         break;
