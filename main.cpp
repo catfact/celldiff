@@ -59,6 +59,8 @@ static f64 disspolyscale = 0.0;
 static u32 polyShellWidth = 1;
 // polymer-shell "imbalance factor"
 static f64 polyShellBalance = 0.5;
+// boundary diffusion rate
+static f64 boundDiff = 0.02;
 
 //============== function declarations
 int main(const int argc, char* const* argv);
@@ -142,7 +144,8 @@ int main (const int argc, char* const* argv) {
                   dissprob,    // dissolution probability scale,
                   disspolyscale, // dissolution probability -> polymer correlation factor,
                   polyShellWidth,       // shell width
-                  polyShellBalance  // shell balance
+                  polyShellBalance,  // shell balance
+                  boundDiff
                   );
 	
   mvprintw(0, 0, "cube width %i, pd: %f, pp: %f\n\n", (int)n, pd, pp);
@@ -279,27 +282,28 @@ static void end_graphics(void) {
 int parse_args(const int argc, char* const* argv) {
   
   static struct option long_options[] = {
-    {"cubelength",      required_argument, 0, 'n'}, 
-    {"maxiterations",		required_argument, 0, 'c'},
-    {"polymer",         required_argument, 0, 'p'},
-    {"cylinderheight",	required_argument, 0, 'h'},
-    {"releasedfile",		required_argument, 0, 'r'},
-    {"statefile",       required_argument, 0, 's'},
-    {"stateperiod",     required_argument, 0, 't'},
-    {"nochangecount",		required_argument, 0, 'd'},
-    {"seed",            required_argument, 0, 'e'},
-    {"asciiperiod",     required_argument, 0, 'a'},
-    {"dissdenom",       required_argument, 0, 'o'},
-    {"disspolyscale",		required_argument, 0, 'i'},
-    {"polyshellwidth",	required_argument, 0, 'w'},
-    {"polyshellbalance",required_argument, 0, 'b'},
+    {"cubelength",        required_argument, 0, 'n'}, 
+    {"maxiterations",		  required_argument, 0, 'c'},
+    {"polymer",           required_argument, 0, 'p'},
+    {"cylinderheight",	  required_argument, 0, 'h'},
+    {"releasedfile",		  required_argument, 0, 'r'},
+    {"statefile",         required_argument, 0, 's'},
+    {"stateperiod",       required_argument, 0, 't'},
+    {"nochangecount",		  required_argument, 0, 'd'},
+    {"seed",              required_argument, 0, 'e'},
+    {"asciiperiod",       required_argument, 0, 'a'},
+    {"dissdenom",         required_argument, 0, 'o'},
+    {"disspolyscale",		  required_argument, 0, 'i'},
+    {"polyshellwidth",	  required_argument, 0, 'w'},
+    {"polyshellbalance",  required_argument, 0, 'b'},
+    {"boundarydiffusion", required_argument, 0, 'f'},
     {0, 0, 0, 0}
   };
   
   int opt = 0;
   int opt_idx = 0;
   while (1) {
-    opt = getopt_long(argc, argv, "n:c:p:h:r:s:t:d:e:a:o:i:w:b:",
+    opt = getopt_long(argc, argv, "n:c:p:h:r:s:t:d:e:a:o:i:w:b:f:",
                       long_options, &opt_idx);
     if (opt == -1) { break; }
     
@@ -346,6 +350,9 @@ int parse_args(const int argc, char* const* argv) {
       case 'b':
         polyShellBalance = atof(optarg);
         break;
+      case 'f':
+        boundDiff = atof(optarg);
+        break;
       default:
         break;
     }
@@ -362,8 +369,8 @@ void printFrame(CellModel* model, u32 slice) {
     for(u32 k=0; k<n; k++) {
       idx = i*n*n + j*n + k;
       attron(COLOR_PAIR(model->cells[idx]->state + 1));
-      if (model->cells[idx]->state == eStateWet) {
-        mvprintw(6+j, k * 2, "%d.1 ", (int)(model->cells[idx]->concentration[eStateDrug] * 9.5));
+      if ((model->cells[idx]->state == eStateWet) || (model->cells[idx]->state == eStateBound) ) {
+        mvprintw(6+j, k * 2, "%d", (int)(model->cells[idx]->concentration[eStateDrug] * 99.0));
       } else {
         // if(model->cells[idx]->state == eStateDummy) {
         //   mvprintw(6+j, k * 2, "XX", model->cells[idx]->state);

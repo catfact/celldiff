@@ -103,7 +103,8 @@ CellModel::CellModel(
                      f64 dprob,
                      f64 dpolyscale,
                      u32 shellwidth,
-                     f64 polyshellbalance
+                     f64 polyshellbalance,
+                     f64 bounddiffrate
                      ) :
 #if USE_BOOST
 rngEngine(), rngDist(0.f, 1.f),
@@ -121,7 +122,8 @@ numCellsToProcess(0),
 wShell(shellwidth),
 pPoly(ppoly),
 pDrug(pdrug),
-pShellBalance(polyshellbalance)
+pShellBalance(polyshellbalance),
+boundDiff(bounddiffrate)
 {
   
   cubeLength2 = cubeLength * cubeLength;
@@ -166,267 +168,6 @@ CellModel::~CellModel() {
   delete rngGen;
 #endif
 }
-
-//------- set up tablet shape, find neighbors, and populate
-/*
-void CellModel::setup(void) {
-  u32 cX;
-  u32 cY;
-  u32 r2;
-  f64 rnd;
-  u32 cubeR2;
-  u32 idx;
-  u32 nIdx;
-  u32 nIdx2;
-  u8 l, m, n;
-  u32 numH;
-  
-  cX = cubeLength >> 1;
-  cY = cX;
-  cubeR2 = (cX-1) * (cX-1);
-  eCellState swapstate;
-  
-  // number of cells in cylinder height
-  numH = cylinderHeight * cubeLength;
-	
-	
-  // offset coordinates to get diagonals in 2x2x2
-  const u8 diags[4][3]	= { {0, 0, 0}, {0, 1, 1}, {1, 0, 1}, {1, 1, 0} };
-  // complementary diagonals
-  const u8 diagsNot[4][3]	= { {1, 1, 1}, {1, 0, 0}, {0, 1, 0}, {0, 0, 1} };
-  u8 diag = 0;
-	
-  //-------- with compression
-	
-  // loop over alternate [x, y, z] indices
-  // process each 2x2x2 based on state result
-  for(u32 i=0; i<cubeLength; i += 2) {
-    for(u32 j=0; j<cubeLength; j += 2) {
-      for(u32 k=0; k<cubeLength; k += 2) {
-        idx = subToIdx(i, j, k);
-        if ((i < 1) 
-            || (j < 1) 
-            || (k < 1)
-            || (i > (cubeLength-3))
-            || (j > (cubeLength-3))
-            || (k > (cubeLength-3)) ) {
-          // boundary cells
-          // fill the whole 2x2x2
-          for(l=0; l<2; l++) {
-            for(m=0; m<2; m++) {
-              for(n=0; n<2; n++) {
-                nIdx = subToIdx(i+l, j+m, k+n);
-                cells[nIdx]->state = eStateBound;
-              }
-            }
-          }
-        } // end edge branch
-        else {
-          r2 = (i-cX+1)*(i-cX+1) + (j-cY+1)*(j-cY+1);
-          if((r2 < cubeR2) && (k <= (numH))) {
-						
-            rnd = getRand();
-            if(rnd < pDrug) {
-              // drug cells: fill diagonals
-              for(diag = 0; diag<4; diag++) {
-                nIdx = subToIdx(i+diags[diag][0], j+diags[diag][1], k+diags[diag][2]);
-                cells[nIdx]->state = eStateDrug;
-                drugMassTotal += 1.f;
-              }
-              // opposite diagonals are empty
-              for(diag = 0; diag<4; diag++) {
-                nIdx = subToIdx(i+diagsNot[diag][0], j+diagsNot[diag][1], k+diagsNot[diag][2]);
-                cells[nIdx]->state = eStateVoid;
-              }
-							
-            } else if (rnd < (pDrug + pEx)) {
-              // excipient cells: fill diagonals
-              for(diag = 0; diag<4; diag++) {
-                u32	nIdx = subToIdx(i+diags[diag][0], j+diags[diag][1], k+diags[diag][2]);
-                cells[nIdx]->state = eStateEx;
-              }
-              // opposite diagonals are empty
-              for(diag = 0; diag<4; diag++) {
-                nIdx = subToIdx(i+diagsNot[diag][0], j+diagsNot[diag][1], k+diagsNot[diag][2]);
-                cells[nIdx]->state = eStateVoid;
-              }
-            } else if (rnd < (pDrug + pEx + pPoly)) {
-              cells[idx]->state = eStatePoly;
-              // poly cells: fill the whole 2x2x2
-              for(l=0; l<2; l++) {
-                for(m=0; m<2; m++) {
-                  for(n=0; n<2; n++) {
-                    nIdx = subToIdx(i+l, j+m, k+n);
-                    cells[nIdx]->state = eStatePoly;
-                  }
-                }
-              }
-            } 
-						
-          } // end in-cylinder branch
-          else { 
-            // boundary cells
-            // fill the whole 2x2x2
-            for(l=0; l<2; l++) {
-              for(m=0; m<2; m++) {
-                for(n=0; n<2; n++) {
-                  nIdx = subToIdx(i+l, j+m, k+n);
-                  cells[nIdx]->state = eStateBound;
-                }
-              }
-            }
-          }
-        } // end not-edge branch
-      } // end k loop
-    } // end j loop
-  } // end i loop
-	
-  /// 2nd loop: each polymer 2x2x2 randomly swaps diagonal complements with neighbors
-  for(u32 i=0; i<cubeLength; i += 2) {
-    for(u32 j=0; j<cubeLength; j += 2) {
-      for(u32 k=0; k<cubeLength; k += 2) {
-        idx = subToIdx(i, j, k);
-        if( (cells[idx]->state == eStatePoly) && (cells[idx+1]->state == eStatePoly) ) {
-          u32 nIdxBase[3] = {i, j, k};
-          // only want to swap with neighbor meta-cells that are not poly...
-          // array for storing neighbor idx's which meet this criterion.
-          u64 notPolyN[6] = { 0, 0, 0, 0, 0, 0 };
-          u8 numNotPolyN = 0;
-          u8 swapN;
-          
-          for (u8 n=0; n < NUM_NEIGHBORS; n++) {
-            switch(n) { 
-              case 0:
-                nIdxBase[0] = i+2;
-                nIdxBase[1] = j;
-                nIdxBase[2] = k;
-                break;
-              case 1:
-                nIdxBase[0] = i-2;
-                nIdxBase[1] = j;
-                nIdxBase[2] = k;
-                break;
-              case 2:
-                nIdxBase[0] = i;
-                nIdxBase[1] = j+2;
-                nIdxBase[2] = k;
-                break;
-              case 3:
-                nIdxBase[0] = i;
-                nIdxBase[1] = j-2;
-                nIdxBase[2] = k;
-                break;
-              case 4:
-                nIdxBase[0] = i;
-                nIdxBase[1] = j;
-                nIdxBase[2] = k+2;
-                break;
-              case 5:
-                nIdxBase[0] = i;
-                nIdxBase[1] = j;
-                nIdxBase[2] = k-2;
-                break;
-              default:
-                nIdxBase[0] = i;
-                nIdxBase[1] = j;
-                nIdxBase[2] = k;
-                break;
-            }
-            nIdx = subToIdx(nIdxBase[0], nIdxBase[1], nIdxBase[2]);
-            if( (cells[nIdx]->state != eStatePoly)
-               && (cells[nIdx+1]->state != eStatePoly)
-               && (cells[nIdx+1]->state != eStateBound)) {
-              // this neighbor is not polymer, and has not been swapped, so add it to the swappable list
-              notPolyN[numNotPolyN] = nIdx;
-              numNotPolyN++;
-            }
-          }
-          
-          // continue loop if there are no non-poly neighors,
-          // otherwise randomly choose between them and swap diagonals
-          if (numNotPolyN == 0) { continue; } 
-          else {
-            swapN = (u8)(getRand() * ((f64)numNotPolyN  - 0.5f));
-            idxToSub(notPolyN[swapN], &(nIdxBase[0]), &(nIdxBase[1]), &(nIdxBase[2]));
-            for(diag = 0; diag<4; diag++) {
-              nIdx = subToIdx(i+diags[diag][0], j+diags[diag][1], k+diags[diag][2]);
-              nIdx2 = subToIdx(nIdxBase[0]+diagsNot[diag][0], nIdxBase[1]+diagsNot[diag][1], nIdxBase[2]+diagsNot[diag][2]);
-              swapstate = cells[nIdx2]->state;
-              if (swapstate != eStateBound) {
-                cells[nIdx2]->state = cells[nIdx]->state;
-                cells[nIdx]->state = swapstate;
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-	
-	
-  /// 3rd loop: find cells to process
-  u8 proc = 0;
-  eCellState tmpState;
-  for(u32 i=0; i<numCells; i++) {
-    findNeighbors(cells[i]);
-    /// add to processCells
-    switch (cells[i]->state) {
-      case eStateDrug:
-      case eStateEx:
-      case eStateVoid:
-        proc = 1;
-        // printf("{ %d, %d } ; ", (int)numCellsToProcess, (int)cells[i]->idx);
-        break;
-      case eStateBound:
-        // want to process boundary cells only if they adjoin a non-boundary
-        for(u8 ni = 0; ni<NUM_NEIGHBORS; ni++) {
-          tmpState = cells[cells[i]->neighborIdx[ni]]->state;
-          proc |= (tmpState != eStatePoly && tmpState != eStateBound);
-        }
-        break;
-      default:
-        break;
-    }
-    if(proc) { 	
-      // find neighbors-with-polymer count
-      u8 np = 0;
-      for(u8 nb=0; nb<NUM_NEIGHBORS; nb++) {
-        if ( cells[cells[i]->neighborIdx[nb]]->state == eStatePoly ) {
-          np++;
-        }
-      }
-      
-      // don't need to process if cell is trapped by polymer
-      if (np > 5) {
-        if(cells[i]->state == eStateDrug) {
-          trappedDrugMass += 1.0;
-        }
-        continue;
-      }
-      
-      cellsToProcess[numCellsToProcess] = cells[i]->idx;
-      numCellsToProcess++;
-      
-      cells[i]->diffMul = diffNMul[np];
-      cells[i]->dissSteps = dissNSteps[np];
-      cells[i]->dissInc = 1.0 / (f64)(cells[i]->dissSteps);
-      
-      //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      // scale this cell's dissolution probabilty by NPN.. 
-      // something like this?
-      const f64 npscale = ((NUM_NEIGHBORS - np) / NUM_NEIGHBORS);
-      cells[i]->dissProb = (dissprob * npscale * disspolyscale) + (dissprob * (1.0 - disspolyscale));
-      //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    }
-  }
-  
-  // initialize the update data
-  for(u32 i=0; i<numCells; i++) {
-    *(cellsUpdate[i]) = *(cells[i]);
-  }
-  drugMass = drugMassTotal;
-}
- */
 
 //------- dissolve
 eCellState CellModel::dissolve(const Cell* const cell) {
@@ -526,7 +267,7 @@ void CellModel::diffuse(const Cell* const cell) {
 //---------- iterate!!
 f64 CellModel::iterate(void) {
   Cell* cell;
-  /////// TODO: incorporate threading engine. debugging single-tvhreaded version first...
+  /////// TODO: incorporate threading engine. debugging single-threaded version first...
 	
   for (u32 i=0; i<numCellsToProcess; i++) {
     cell = cells[cellsToProcess[i]];
@@ -554,11 +295,13 @@ f64 CellModel::iterate(void) {
       case eStateDissEx:
         continueDissolve(cell);
         break;
-        /*
-         case eStateBound:
-         cell->concentration[0] = 0.f;
-         cell->concentration[1] = 0.f;
-         */
+      case eStateBound:
+        diffuse(cell);
+        cell->concentration[0] -= boundDiff;
+        cell->concentration[1] -= boundDiff;
+        if(cell->concentration[0] < 0.f) cell->concentration[0] = 0.f;
+        if(cell->concentration[1] < 0.f) cell->concentration[1] = 0.f;
+        break;
       default:
         break;
     }
@@ -593,7 +336,7 @@ f64 CellModel::iterate(void) {
 void CellModel::calcDrugMass(void) {
   // calculate current drug mass
   // FIXME: this is the slow way to do it.
-  // better to update during the diffusion step?
+  // better to update during the diffusion step, and save a loop
   // tryingfor accuracy first.
   Cell* cell;	
   drugMass = trappedDrugMass;

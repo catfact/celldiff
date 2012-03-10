@@ -75,26 +75,27 @@ public:
   f64 diffMul;
 	// dissolution probability for this cell (function of NPN)
 	f64 dissProb;
-
+  
 };
 
 class CellModel {
 public:
   CellModel(
-      u32 n,
-	    f64 h,
-	    f64 pDrug,
-	    f64 pPoly,
-	    f64 cellW,
-	    f64 dT,
-      f64 ddrug=7e-6,
-      f64 dex=7e-6,
-      u32 seed=47u,
-      f64 diss=1.0,
-      f64 disspoly=0.0,
-      u32 shellWidth=1,
-      f64 polyshellbalance=2.0
-  );
+            u32 n,
+            f64 h,
+            f64 pDrug,
+            f64 pPoly,
+            f64 cellW,
+            f64 dT,
+            f64 ddrug=7e-6,
+            f64 dex=7e-6,
+            u32 seed=47u,
+            f64 diss=1.0,
+            f64 disspoly=0.0,
+            u32 shellWidth=1,
+            f64 polyshellbalance=2.0,
+            f64 bounddiffrate = 0.02
+            );
   ~CellModel(void);
   // set initial values, tablet shape, etc
   void setup(void);
@@ -161,6 +162,8 @@ public: // FIXME: many of these could be privatized
 	f64 dissprob;
 	// dissolution probability / NPN weighting
 	f64 disspolyscale;
+  // boundary diffusion rate
+  f64 boundDiff;
   // shell width in cells
   u32 wShell;
   // polymer-shell "imbalance factor"
