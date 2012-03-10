@@ -17,11 +17,13 @@ using namespace std;
 //// top-level setup function. initializes cell type data
 void CellModel::setup(void) {
   //////////// DEBUG
+  /*
   u32 stateCount[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
   u32 cellsInTablet = 0;
   f64 drugCountRatio, polyCountRatio;
   f64 exCountRatio, voidCountRatio;
   u8 dum=0;
+   */
   ////////////
   
   
@@ -32,6 +34,7 @@ void CellModel::setup(void) {
   
   
   ////////// DEBUG
+  /*
   // another loop over all cells to verify final cell distribution count
   for(u8 s=0; s<8; s++) { stateCount[s] = 0; }
   for (u32 n=0; n<numCells; n++) {
@@ -45,6 +48,7 @@ void CellModel::setup(void) {
   voidCountRatio  = (f64)stateCount[eStateVoid] / (f64)cellsInTablet;
   // debugger hook
   dum++;
+   */
   /////////////////
   
   //------- COMPRESS
@@ -125,6 +129,7 @@ void CellModel::setup(void) {
 	drugMass = drugMassTotal;
   
   ////////// DEBUG
+  /*
   // another loop over all cells to verify final cell distribution count
   for(u8 s=0; s<8; s++) { stateCount[s] = 0; }
   for (u32 n=0; n<numCells; n++) {
@@ -138,6 +143,7 @@ void CellModel::setup(void) {
   voidCountRatio  = (f64)stateCount[eStateVoid] / (f64)cellsInTablet;
   // debugger hook
   dum++;
+   */
   /////////////////
   
 }

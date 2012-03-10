@@ -365,11 +365,11 @@ void printFrame(CellModel* model, u32 slice) {
       if (model->cells[idx]->state == eStateWet) {
         mvprintw(6+j, k * 2, "%d.1 ", (int)(model->cells[idx]->concentration[eStateDrug] * 9.5));
       } else {
-        if(model->cells[idx]->state == eStateDummy) {
-          mvprintw(6+j, k * 2, "XX", model->cells[idx]->state);
-        } else {
+        // if(model->cells[idx]->state == eStateDummy) {
+        //   mvprintw(6+j, k * 2, "XX", model->cells[idx]->state);
+        // } else {
           mvprintw(6+j, k * 2, "%d ", model->cells[idx]->state);
-        }
+        // }
       }
       attroff(COLOR_PAIR(model->cells[idx]->state + 1));
     }
