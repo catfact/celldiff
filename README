@@ -4,6 +4,7 @@ celldiff arguments
 -n, --cubelength        : number of cells on each side of cube
 -c, --maxiterations     : maximum iterations to perform before stopping
 -p, --polymer           : polymer concentration in [0, 1]
+-g, --drug              : drug concentration in [0, 1]
 -h, --cylinderheight    : height of cylinder as a ratio of cube length
 -r, --releasedfile      : filname for exporting release curve. defaults to a timestamped name
 -s, --statefile         : filename for exporting full state data. defaults to a timestamped name
