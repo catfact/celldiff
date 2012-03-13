@@ -227,7 +227,7 @@ void CellModel::distribute(void) {
   ///// distribute polymer cells
   u32 nBlocks = shellIdx.size() + tabletIdx.size();
   nPolyBlocks = (u32)((f64)nBlocks * pPoly);
-  nDrugBlocks = (u32)((f64)nBlocks * pDrug) * 2;
+  nDrugBlocks = (u32)((f64)nBlocks * pDrug);
   
   // use shellBalance as deviation from expected distribution in shell
 //  u32 nPolyInShell = (u32)( (f64)shellIdx.size() * pPoly * pShellBalance);

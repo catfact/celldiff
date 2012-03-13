@@ -168,7 +168,7 @@ int main (const int argc, char* const* argv) {
   u32 frameStep = 0;
   u8 halt = 0;
   
-  fprintf(releasedOut, "0.0");
+  fprintf(releasedOut, "0.0\t0.0");
   
   while(halt == 0)    {
     step++;
@@ -220,7 +220,7 @@ int main (const int argc, char* const* argv) {
     const double r = released[1] / model.drugMassTotal;
     mvprintw(1, 0, "iteration %d of %d, released %f of %f, ratio %f", step, iterationCount, released[1], model.drugMassTotal, r);
     
-    fprintf(releasedOut, "\n%f", r);
+    fprintf(releasedOut, "\n%f\t%f", model.dt * (float)step, r);
 		
     refresh();
   } // end main loop
