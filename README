@@ -1,23 +1,22 @@
 
 celldiff arguments
 
--n, --cubelength        : number of cells on each side of cube
--c, --maxiterations     : maximum iterations to perform before stopping
--p, --polymer           : polymer concentration in [0, 1]
--g, --drug              : drug concentration in [0, 1]
--h, --cylinderheight    : height of cylinder as a ratio of cube length
+-n, --cubelength        : (32) n  umber of cells on each side of cube
+-c, --maxiterations     : (100)  maximum iterations to perform before stopping
+-p, --polymer           : (0.3)  polymer concentration in [0, 1]
+-g, --drug              : (0.1)  drug concentration in [0, 1]
+-h, --cylinderheight    : (0.23) height of cylinder as a ratio of cube length
 -r, --releasedfile      : filname for exporting release curve. defaults to a timestamped name
 -s, --statefile         : filename for exporting full state data. defaults to a timestamped name
--t, --stateperiod       : how often to export full state data. 
--d, --nochangecount     : how many consecutive unchanging iterations before halting
--e, --seed              : random number seed (unsigned integer)
--a, --asciiperiod       : set the frame period in iterations for drawing ascii animation
--o, --dissdenom         : set the dissolution probability scale, e.g. the probability of dissolving is multiplied by o
--i, --disspolyscale     : set the scaling of polymer percent / dissolution probability denominator
--w, --polyshellwidth    : set the width of the polymer shell (calculated in 8-cell, 2x2x2 blocks)
--b, --polyshellbalance  : set the distribution of polymer in the shell, as a fraction of total polymer cells
--b, --polyshellbalance  : set the distribution of polymer in the shell, as a fraction of total polymer cells
--f, --boundarydiffusion : set an exponential decay factor for concentrations in boundary cells
+-t, --stateperiod       : (0)    how often to export full state data; 0 == never 
+-d, --nochangecount     : (100)  how many consecutive unchanging iterations before halting
+-e, --seed              : (47)   random number seed (unsigned integer)
+-a, --asciiperiod       : (1)    set the frame period in iterations for drawing ascii animation
+-o, --dissdenom         : (1.0)  set the dissolution probability scale, e.g. the probability of dissolving is multiplied by o
+-i, --disspolyscale     : (0.0) set the scaling of polymer percent / dissolution probability denominator
+-w, --polyshellwidth    : (1) set the width of the polymer shell (calculated in 8-cell, 2x2x2 blocks)
+-b, --polyshellbalance  :(0.5)  set the distribution of polymer in the shell, as a fraction of total polymer cells
+-f, --boundarydiffusion : (0.9) set an exponential decay factor for concentrations in boundary cells
 
 the ratio of released drug mass is printed as newline-separated values to the specified file path.
 
