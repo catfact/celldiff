@@ -17,13 +17,13 @@ using namespace std;
 //// top-level setup function. initializes cell type data
 void CellModel::setup(void) {
   //////////// DEBUG
-  /*
+  /*  
   u32 stateCount[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
   u32 cellsInTablet = 0;
   f64 drugCountRatio, polyCountRatio;
   f64 exCountRatio, voidCountRatio;
   u8 dum=0;
-   */
+  */
   ////////////
   
   
@@ -48,7 +48,7 @@ void CellModel::setup(void) {
   voidCountRatio  = (f64)stateCount[eStateVoid] / (f64)cellsInTablet;
   // debugger hook
   dum++;
-   */
+  */
   /////////////////
   
   //------- COMPRESS
@@ -143,7 +143,7 @@ void CellModel::setup(void) {
   voidCountRatio  = (f64)stateCount[eStateVoid] / (f64)cellsInTablet;
   // debugger hook
   dum++;
-   */
+  */
   /////////////////
   
 }
@@ -227,12 +227,15 @@ void CellModel::distribute(void) {
   ///// distribute polymer cells
   u32 nBlocks = shellIdx.size() + tabletIdx.size();
   nPolyBlocks = (u32)((f64)nBlocks * pPoly);
-  nDrugBlocks = (u32)((f64)nBlocks * pDrug);
+  nDrugBlocks = (u32)((f64)nBlocks * pDrug) * 2;
   
+  // use shellBalance as deviation from expected distribution in shell
 //  u32 nPolyInShell = (u32)( (f64)shellIdx.size() * pPoly * pShellBalance);
-//  u32 nPolyInShell = shellIdx.size() * pShellBalance;
-  u32 nPolyInShell = (u32)((float)nPolyBlocks * pShellBalance);
-  
+// use shellBalance as proportion of total polymer
+//  u32 nPolyInShell = (u32)((float)nPolyBlocks * pShellBalance);
+// use shellBalance as proportion of total shell size
+u32 nPolyInShell = shellIdx.size() * pShellBalance;
+
   if(nPolyInShell > shellIdx.size()) {
     nPolyInShell = shellIdx.size();
   }
