@@ -106,8 +106,7 @@ int main (const int argc, char* const* argv) {
     //  return 0;
   }
   
-  frameNum = n >> 1;
-  
+  frameNum = n >> 1; 
   
   start_graphics();
   
@@ -284,7 +283,8 @@ int parse_args(const int argc, char* const* argv) {
   static struct option long_options[] = {
     {"cubelength",        required_argument, 0, 'n'}, 
     {"maxiterations",		  required_argument, 0, 'c'},
-    {"polymer",           required_argument, 0, 'p'},
+    {"polymer ratio",     required_argument, 0, 'p'},
+    {"drug ratio",        required_argument, 0, 'g'},
     {"cylinderheight",	  required_argument, 0, 'h'},
     {"releasedfile",		  required_argument, 0, 'r'},
     {"statefile",         required_argument, 0, 's'},
@@ -303,7 +303,7 @@ int parse_args(const int argc, char* const* argv) {
   int opt = 0;
   int opt_idx = 0;
   while (1) {
-    opt = getopt_long(argc, argv, "n:c:p:h:r:s:t:d:e:a:o:i:w:b:f:",
+    opt = getopt_long(argc, argv, "n:c:p:g:h:r:s:t:d:e:a:o:i:w:b:f:",
                       long_options, &opt_idx);
     if (opt == -1) { break; }
     
@@ -316,6 +316,9 @@ int parse_args(const int argc, char* const* argv) {
         break;
       case 'p' :
         pp = atof(optarg);
+        break;
+      case 'g' :
+        pd = atof(optarg);
         break;
       case 'h' :
         h = atof(optarg);
