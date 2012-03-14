@@ -229,6 +229,11 @@ void CellModel::distribute(void) {
   nPolyBlocks = (u32)((f64)nBlocks * pPoly);
   nDrugBlocks = (u32)((f64)nBlocks * pDrug);
   
+  
+  if(nPolyBlocks > (nBlocks - nDrugBlocks)) {
+    nPolyBlocks = nBlocks - nDrugBlocks;
+  }
+  
   // use shellBalance as deviation from expected distribution in shell
 //  u32 nPolyInShell = (u32)( (f64)shellIdx.size() * pPoly * pShellBalance);
 // use shellBalance as proportion of total polymer
@@ -252,6 +257,9 @@ u32 nPolyInShell = shellIdx.size() * pShellBalance;
   }
   
   // poly in tablet
+  if ((nPolyBlocks - nPolyInShell) > tabletIdx.size()) {
+    nPolyBlocks = nPolyInShell + tabletIdx.size();
+  }
   for(n=nPolyInShell; n < nPolyBlocks; n++) {
     polyIdx.push_back(tabletIdx.back());
     tabletIdx.pop_back();

@@ -9,8 +9,11 @@
 #include <cstdio>
 #include <cstdlib>
 #include <ctime>
+#include <cstdarg>
+
 #include <string>
 #include <sstream>
+
 #include <ncurses.h>
 #include <getopt.h>
 
@@ -61,6 +64,8 @@ static u32 polyShellWidth = 1;
 static f64 polyShellBalance = 0.5;
 // boundary decay factor
 static f64 boundDiff = 0.9;
+// no-graphics mode
+static u8 nographics = 0;
 
 //============== function declarations
 int main(const int argc, char* const* argv);
@@ -69,8 +74,22 @@ static int parse_args(const int argc, char* const* argv);
 static void start_graphics(void);
 static void end_graphics(void);
 static void printFrame(CellModel* model, u32 frame);
+static void print(const int x, const int y, char* fmt, ...);
 
 //============== function definitions
+void print(const int x, const int y, char* fmt, ...) {
+  
+  va_list args;
+  va_start(args,fmt);
+  if(nographics) {
+    vprintf(fmt, args);
+    printf("\n");
+  } else {
+    mvprintw(x, y, fmt, args);
+    refresh();
+  }
+  va_end(args);
+}
 
 //------ main
 int main (const int argc, char* const* argv) {
@@ -94,9 +113,6 @@ int main (const int argc, char* const* argv) {
   releasedPath = "diff_release_" + timetag.str() + ".txt";
   statePath = "diff_state_" + timetag.str() + ".txt";
   iterationCount = 100;
-  
-	
-	frameNum = 6;
 	
   // return something if --help passed?
   int parsed = parse_args(argc, argv);
@@ -106,9 +122,7 @@ int main (const int argc, char* const* argv) {
     //  return 0;
   }
   
-  frameNum = n >> 1; 
-  
-  start_graphics();
+  frameNum = n >> 1; // show center slice
   
   // finish setting up variables
   pd = 0.1;
@@ -128,7 +142,7 @@ int main (const int argc, char* const* argv) {
     }
   }
   
-  start_graphics();
+  if(nographics) {} else { start_graphics(); }
   
   CellModel model(
                   n,      // cube width,
@@ -147,23 +161,22 @@ int main (const int argc, char* const* argv) {
                   boundDiff
                   );
 	
-  mvprintw(0, 0, "cube width %i, pd: %f, pp: %f\n\n", (int)n, pd, pp);
-  mvprintw(1, 0, "initializing...");
-  refresh();	
+  print(0, 0, "cube width %i, pd: %f, pp: %f", (int)n, pd, pp);
+  if(nographics) {} else { print(1, 0, "initializing..."); }
   model.setup();
-	
-  mvprintw(1, 0, "(usage: celldiff count cubeLength pPoly releaseThresh frameInt frameSlice) \n\n");
-  mvprintw(2, 0, "cell memory is %d bytes\n\n", model.numCells * sizeof(Cell));
-  mvprintw(3, 0, "performing %d iterations on %d cells. press any key to continue...\n\n", iterationCount, n*n*n);
-	
-  refresh();
-  getchar();
-  mvprintw(1, 0, "                                                                            ");
-  mvprintw(2, 0, "                                                                            ");
-  mvprintw(3, 0, "                                                                            ");
-  mvprintw(4, 0, "                                                                            ");
-  refresh();
-	
+  
+  print(2, 0, "cell memory is %d bytes", model.numCells * sizeof(Cell));
+  if(nographics) {
+    print(3, 0, "performing %d iterations on %d cells.", iterationCount, n*n*n);
+  } else {
+    print(3, 0, "performing %d iterations on %d cells. press any key to continue...", iterationCount, n*n*n);
+    getchar();
+    print(1, 0, "                                                                            ");
+    print(2, 0, "                                                                            ");
+    print(3, 0, "                                                                            ");
+    print(4, 0, "                                                                            ");
+	}
+  
   int step = 0;
   u32 frameStep = 0;
   u8 halt = 0;
@@ -218,33 +231,38 @@ int main (const int argc, char* const* argv) {
     }
     
     const double r = released[1] / model.drugMassTotal;
-    mvprintw(1, 0, "iteration %d of %d, released %f of %f, ratio %f", step, iterationCount, released[1], model.drugMassTotal, r);
-    
+    print(1, 0, "iteration %d of %d, released %f of %f, ratio %f", step, iterationCount, released[1], model.drugMassTotal, r);
     fprintf(releasedOut, "\n%f\t%f", model.dt * (float)step, r);
-		
-    refresh();
+    
   } // end main loop
   
   printFrame(&model, frameNum); 
   
   switch(halt) {
     case HALT_MAX_ITERATIONS:
-      mvprintw(2, 0, "finished maximum iterations; simulation halted. press any key to quit...              ");
+      if(nographics) {
+        print(2, 0, "finished maximum iterations; simulation halted.");
+      } else {
+        print(2, 0, "finished maximum iterations; simulation halted. press any key to quit...              ");
+        getchar();
+      }
       break;
     case HALT_NO_CHANGE:
-      
-      mvprintw(2, 0, "released mass appears stable; simulation halted . press any key to quit...           ");
+      if(nographics) {
+        print(2, 0, "released mass appears stable; simulation halted.");
+      } else {
+        print(2, 0, "released mass appears stable; simulation halted. press any key to quit...           ");
+        getchar();
+      }
       break;
   }
   
-  refresh();
-  getchar();
   
   fclose(releasedOut);
   if(statePeriod > 0) {
     fclose(stateOut);
   }
-  end_graphics(); 
+  if (nographics) { } else { end_graphics(); }
   return 1;
 }
 
@@ -253,14 +271,14 @@ static void start_graphics(void) {
   initscr();
   raw();
   noecho();
-	
+  
   if(has_colors() == FALSE) {
     endwin();
     printf("Your terminal does not support color!\n");
   }
   
   start_color();
-	
+  
   init_pair(1, COLOR_BLACK, COLOR_WHITE);
   init_pair(2, COLOR_BLACK, COLOR_CYAN);
   init_pair(3, COLOR_BLACK, COLOR_GREEN);
@@ -297,13 +315,14 @@ int parse_args(const int argc, char* const* argv) {
     {"polyshellwidth",	  required_argument, 0, 'w'},
     {"polyshellbalance",  required_argument, 0, 'b'},
     {"boundarydiffusion", required_argument, 0, 'f'},
+    {"nographics",        required_argument, 0, 'x'},
     {0, 0, 0, 0}
   };
   
   int opt = 0;
   int opt_idx = 0;
   while (1) {
-    opt = getopt_long(argc, argv, "n:c:p:g:h:r:s:t:d:e:a:o:i:w:b:f:",
+    opt = getopt_long(argc, argv, "n:c:p:g:h:r:s:t:d:e:a:o:i:w:b:f:x:",
                       long_options, &opt_idx);
     if (opt == -1) { break; }
     
@@ -356,6 +375,8 @@ int parse_args(const int argc, char* const* argv) {
       case 'f':
         boundDiff = atof(optarg);
         break;
+      case 'x':
+        nographics = atoi(optarg);
       default:
         break;
     }
@@ -378,7 +399,7 @@ void printFrame(CellModel* model, u32 slice) {
         // if(model->cells[idx]->state == eStateDummy) {
         //   mvprintw(6+j, k * 2, "XX", model->cells[idx]->state);
         // } else {
-          mvprintw(6+j, k * 2, "%d ", model->cells[idx]->state);
+        mvprintw(6+j, k * 2, "%d ", model->cells[idx]->state);
         // }
       }
       attroff(COLOR_PAIR(model->cells[idx]->state + 1));
