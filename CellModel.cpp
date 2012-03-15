@@ -19,8 +19,8 @@
 Cell::Cell(u32 i) {
   state = eStateDummy;
   idx = i;
-  concentration[0] = 0.f;
-  concentration[1] = 0.f;
+  concentration[0] = 0.0;
+  concentration[1] = 0.0;
 }
 
 Cell::~Cell() {
@@ -59,7 +59,7 @@ void CellModel::idxToSub(u32 idx,
                          u32* pZ) {
   *pX = idx % cubeLength;
   *pY = (idx / cubeLength) % cubeLength;
-  *pZ = (idx / cubeLength2) % cubeLength;;
+  *pZ = (idx / cubeLength2) % cubeLength;
 }
 
 
@@ -67,17 +67,18 @@ void CellModel::idxToSub(u32 idx,
 void CellModel::findNeighbors(Cell* cell) {
   u32 x, y, z;
   idxToSub(cell->idx, &x, &y, &z);
-  // boundary cells; their neighbor indices are irrelevant
   if ( (x==0) || (y==0) || (z==0)
       || (x > (cubeLength-2))
       || (y > (cubeLength-2))
       || (z > (cubeLength-2)) ) {
+    // these are cells on the extreme boundary of the cube...
+    // hopefully their neighbor indices should not be used
     for(u8 i=0; i<NUM_NEIGHBORS; i++) {
       cell->neighborIdx[i] = 0;
     }
   } else { 
 #if DIAG_NEIGHBORS
-		
+		//...
 #else
     cell->neighborIdx[0] = subToIdx(x+1,  y,    z);
     cell->neighborIdx[1] = subToIdx(x-1,  y,    z);
@@ -129,12 +130,6 @@ boundDiff(bounddiffrate)
   cubeLength2 = cubeLength * cubeLength;
   numCells = cubeLength * cubeLength * cubeLength;
   dt_l2 = dt / (cellLength * cellLength);
-  
-  // calculate cell distribution..
-  // (divide by 8 because we're initially considering 2x2x2 blocks)
-  // nPoly = (u32)((f32)numCells * pPoly * 0.125);
-  // nDrug = (u32)((f32)numCells * pDrug * 0.125);
-//  nEx = numCells - nPoly - nDrug;
   
   cells =				new Cell* [numCells];
   cellsUpdate =		new Cell* [numCells];
@@ -267,18 +262,21 @@ void CellModel::diffuse(const Cell* const cell) {
 //---------- iterate!!
 f64 CellModel::iterate(void) {
   Cell* cell;
+  ///////// DEBUG
+  u8 dum=0;
+  //////////
+  
   /////// TODO: incorporate threading engine. debugging single-threaded version first...
 	
   for (u32 i=0; i<numCellsToProcess; i++) {
     cell = cells[cellsToProcess[i]];
     // FIXME: processing order of these cases could be optimized
     switch(cell->state) {
-        /*
-         case eStatePoly:
+        case eStatePoly:
          // shouldn't get here!
          // polymer cells: no change
+        dum++;
          break;
-         */
       case eStateWet:
         diffuse(cell);
         break;

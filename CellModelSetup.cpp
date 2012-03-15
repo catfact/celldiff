@@ -17,21 +17,19 @@ using namespace std;
 //// top-level setup function. initializes cell type data
 void CellModel::setup(void) {
   //////////// DEBUG
-  /*  
+    
   u32 stateCount[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
   u32 cellsInTablet = 0;
   f64 drugCountRatio, polyCountRatio;
   f64 exCountRatio, voidCountRatio;
+  u32 cellsAdjoining = 0;
   u8 dum=0;
-  */
-  ////////////
   
+  ////////////
   
   
   ///---- DISTRIBUTE
   this->distribute();
-  
-  
   
   ////////// DEBUG
   /*
@@ -64,10 +62,16 @@ void CellModel::setup(void) {
 	numCellsToProcess = 0;
 	u8 proc = 0;
 	eCellState tmpState;
+  
+  drugMassTotal = 0.0;
+  
 	for(u32 i=0; i<numCells; i++) {
 		findNeighbors(cells[i]);
-		/// add to processCells
+    proc=0;
 		switch (cells[i]->state) {
+      case eStatePoly:
+        proc = 0;
+        break;
 			case eStateDrug:
 				proc = 1;
 				drugMassTotal += 1.0;
@@ -80,15 +84,21 @@ void CellModel::setup(void) {
 				// printf("{ %d, %d } ; ", (int)numCellsToProcess, (int)cells[i]->idx);
 				break;
 			case eStateBound:
-				// want to process boundary cells only if they adjoin a non-boundary
+				// want to process boundary cells only if they adjoin a non-boundary, non-poly
 				for(u8 ni = 0; ni<NUM_NEIGHBORS; ni++) {
 					tmpState = cells[cells[i]->neighborIdx[ni]]->state;
-					proc |= (tmpState != eStatePoly && tmpState != eStateBound);
+					proc |= ((tmpState == eStateDrug) || (tmpState == eStateEx) || (tmpState == eStateVoid));
 				}
+        ////// DEBUG:
+        if(proc) { cellsAdjoining++; }
+        dum++;
+        /////////
 				break;
 			default:
+        proc = 0;
 				break;
 		}
+    
 		if(proc) { 	
 			// find neighbors-with-polymer count
 			u8 np = 0;
@@ -129,7 +139,7 @@ void CellModel::setup(void) {
 	drugMass = drugMassTotal;
   
   ////////// DEBUG
-  /*
+  
   // another loop over all cells to verify final cell distribution count
   for(u8 s=0; s<8; s++) { stateCount[s] = 0; }
   for (u32 n=0; n<numCells; n++) {
@@ -143,7 +153,7 @@ void CellModel::setup(void) {
   voidCountRatio  = (f64)stateCount[eStateVoid] / (f64)cellsInTablet;
   // debugger hook
   dum++;
-  */
+  
   /////////////////
   
 }
@@ -394,7 +404,6 @@ void CellModel::compress(void) {
       }
     }
   }
-  
 }
 
 // set state of a 2x2x2 block of cells

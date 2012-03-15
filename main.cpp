@@ -66,6 +66,8 @@ static f64 polyShellBalance = 0.5;
 static f64 boundDiff = 0.9;
 // no-graphics mode
 static u8 nographics = 0;
+// ncurses window pointer
+static WINDOW* win;
 
 //============== function declarations
 int main(const int argc, char* const* argv);
@@ -85,8 +87,9 @@ void print(const int x, const int y, char* fmt, ...) {
     vprintf(fmt, args);
     printf("\n");
   } else {
-    mvprintw(x, y, fmt, args);
-    refresh();
+    move(x, y);
+    vw_printw(win, fmt, args);
+    wrefresh(win);
   }
   va_end(args);
 }
@@ -288,10 +291,12 @@ static void start_graphics(void) {
   init_pair(7, COLOR_BLACK, COLOR_RED);
   init_pair(8, COLOR_WHITE, COLOR_BLACK);
   init_pair(9, COLOR_WHITE, COLOR_RED);
+  win = newwin(10, 64, 0, 0);
 }
 
 //------ graphics de-init
 static void end_graphics(void) {
+  delwin(win);
   endwin();
 }
 
