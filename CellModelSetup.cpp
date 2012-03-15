@@ -239,7 +239,6 @@ void CellModel::distribute(void) {
   nPolyBlocks = (u32)((f64)nBlocks * pPoly);
   nDrugBlocks = (u32)((f64)nBlocks * pDrug);
   
-  
   if(nPolyBlocks > (nBlocks - nDrugBlocks)) {
     nPolyBlocks = nBlocks - nDrugBlocks;
   }
@@ -249,34 +248,38 @@ void CellModel::distribute(void) {
 // use shellBalance as proportion of total polymer
 //  u32 nPolyInShell = (u32)((float)nPolyBlocks * pShellBalance);
 // use shellBalance as proportion of total shell size
-u32 nPolyInShell = shellIdx.size() * pShellBalance;
-
-  if(nPolyInShell > shellIdx.size()) {
-    nPolyInShell = shellIdx.size();
-  }
   
-  if(nPolyInShell > nPolyBlocks) {
-    nPolyInShell = nPolyBlocks;
-  }
   
-	// poly in shell
+  u32 nPolyInShell = shellIdx.size() * pShellBalance;
+  nPolyInShell = min(nPolyInShell, shellIdx.size());
+  nPolyInShell = min(nPolyInShell, nPolyBlocks);
+  if (nPolyBlocks > tabletIdx.size()) {
+    nPolyInShell = max(nPolyInShell, nPolyBlocks - tabletIdx.size());
+  }
+  u32 nPolyInTablet = nPolyBlocks - nPolyInShell;
+  nPolyInTablet = min(nPolyInTablet, tabletIdx.size());
+  
+  
+  ///// DEBUG
+  if ((nPolyInShell + nPolyInTablet) != nPolyBlocks) {
+    int dum = 0;
+    dum++;
+  }
+  /////////////
+  
   u32 n;
   for(n=0; n < nPolyInShell; n++) {
     polyIdx.push_back(shellIdx.back());
     shellIdx.pop_back();
   }
-  
-  // poly in tablet
-  if ((nPolyBlocks - nPolyInShell) > tabletIdx.size()) {
-    nPolyBlocks = nPolyInShell + tabletIdx.size();
-  }
-  for(n=nPolyInShell; n < nPolyBlocks; n++) {
+
+  for(n=0; n < nPolyInTablet; n++) {
     polyIdx.push_back(tabletIdx.back());
     tabletIdx.pop_back();
   }
   
   // reassign all remaining shell idx's to tablet
-  const u32 shells = shellIdx.size(); /// arg, classic
+  const u32 shells = shellIdx.size();
   for(n=0; n<shells; n++) {
     tabletIdx.push_back(shellIdx.back());
     shellIdx.pop_back();
@@ -291,7 +294,7 @@ u32 nPolyInShell = shellIdx.size() * pShellBalance;
     tabletIdx.pop_back();
   }
   //// everything else becomes excipient
-  const u32 tablets = tabletIdx.size(); /// arg, classic
+  const u32 tablets = tabletIdx.size();
   for( n=0; n<tablets; n++) {
     exIdx.push_back(tabletIdx.back());
     tabletIdx.pop_back();
@@ -407,17 +410,22 @@ void CellModel::compress(void) {
 }
 
 // set state of a 2x2x2 block of cells
-void CellModel::setBlockState(const u32 idx, const eCellState state) {
+void CellModel::setBlockState(const u32 idx, eCellState state) {
   u32 i, j, k;
   u32 nIdx;
   u8 l, m, n, diag;
   idxToSub(idx, &i, &j, &k);
-	
-	
+  
 	static const u8 diags[4][3]	= { {0, 0, 0}, {0, 1, 1}, {1, 0, 1}, {1, 1, 0} };
 	// complementary diagonals
 	static const u8 diagsNot[4][3]	= { {1, 1, 1}, {1, 0, 0}, {0, 1, 0}, {0, 0, 1} };
 	
+  // force border cells to assume boundary state
+  if ( i==0 || j==0 || k==0
+      || i>(cubeLength-2) || j>(cubeLength-2) || k>(cubeLength-2) ) {
+    state = eStateBound;
+  }
+  
 	switch(state) {
     case eStatePoly:
     case eStateBound:
