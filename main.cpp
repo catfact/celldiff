@@ -61,7 +61,7 @@ static f64 disspolyscale = 0.0;
 // width of polymer shell
 static u32 polyShellWidth = 1;
 // polymer-shell "imbalance factor"
-static f64 polyShellBalance = 0.5;
+static f64 polyShellBalance = 1.0;
 // boundary decay factor
 static f64 boundDiff = 0.9;
 // no-graphics mode
@@ -76,10 +76,10 @@ static int parse_args(const int argc, char* const* argv);
 static void start_graphics(void);
 static void end_graphics(void);
 static void printFrame(CellModel* model, u32 frame);
-static void print(const int x, const int y, char* fmt, ...);
+static void print(const int x, const int y, const char* fmt, ...);
 
 //============== function definitions
-void print(const int x, const int y, char* fmt, ...) {
+void print(const int x, const int y, const char* fmt, ...) {
   
   va_list args;
   va_start(args,fmt);
