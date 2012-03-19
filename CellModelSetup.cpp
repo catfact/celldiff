@@ -6,7 +6,6 @@
  *
  *  Created by Ezra Buchla on 03/05/2012
  */
-
 #include <vector>
 #include <algorithm>
 #include "CellModel.hpp"
@@ -250,13 +249,13 @@ void CellModel::distribute(void) {
 // use shellBalance as proportion of total shell size
  // u32 nPolyInShell = shellIdx.size() * pShellBalance;
   
-  nPolyInShell = min(nPolyInShell, shellIdx.size());
-  nPolyInShell = min(nPolyInShell, nPolyBlocks);
+  nPolyInShell = min((unsigned int)nPolyInShell, (unsigned int)(shellIdx.size()));
+  nPolyInShell = min((unsigned int)nPolyInShell, (unsigned int)nPolyBlocks);
   if (nPolyBlocks > tabletIdx.size()) {
     nPolyInShell = max(nPolyInShell, nPolyBlocks - tabletIdx.size());
   }
   u32 nPolyInTablet = nPolyBlocks - nPolyInShell;
-  nPolyInTablet = min(nPolyInTablet, tabletIdx.size());
+  nPolyInTablet = min((unsigned int)nPolyInTablet, (unsigned int)(tabletIdx.size()));
   
   
   ///// DEBUG
