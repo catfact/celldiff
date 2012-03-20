@@ -6,17 +6,24 @@ celldiff arguments
 -p, --polymer           : (0.3)  polymer concentration in [0, 1]
 -g, --drug              : (0.1)  drug concentration in [0, 1]
 -h, --cylinderheight    : (0.23) height of cylinder as a ratio of cube length
--r, --releasedfile      : filname for exporting release curve. defaults to a timestamped name
--s, --statefile         : filename for exporting full state data. defaults to a timestamped name
+-r, --releasedfile      :        filname for exporting release curve. defaults to a timestamped name
+-s, --statefile         :        filename for exporting full state data. defaults to a timestamped name
 -t, --stateperiod       : (0)    how often to export full state data; 0 == never 
 -d, --nochangecount     : (100)  how many consecutive unchanging iterations before halting
 -e, --seed              : (47)   random number seed (unsigned integer)
--a, --asciiperiod       : (1)    set the frame period in iterations for drawing ascii animation
--o, --dissdenom         : (1.0)  set the dissolution probability scale, e.g. the probability of dissolving is multiplied by o
--i, --disspolyscale     : (0.0) set the scaling of polymer percent / dissolution probability denominator
--w, --polyshellwidth    : (1) set the width of the polymer shell (calculated in 8-cell, 2x2x2 blocks)
--b, --polyshellbalance  : (1.0)  set the distribution of polymer in the shell, as an "imbalance factor"
--f, --boundarydiffusion : (0.9) set an exponential decay factor for concentrations in boundary cells
+-a, --asciiperiod       : (1)    frame period in iterations for drawing ascii animation
+-o, --dissdenom         : (1.0)  dissolution probability scale: the probability of dissolving is multiplied by o
+-i, --disspolyscale     : (0.0)  scaling of polymer percent / dissolution probability denominator
+-w, --polyshellwidth    : (1)    width of the polymer shell (calculated in 8-cell, 2x2x2 blocks)
+-b, --polyshellbalance  : (1.0)  distribution of polymer in the shell, as an "imbalance factor"
+-f, --boundarydiffusion : (0.9)  exponential decay factor for concentrations in boundary cells
+-x, --nographics        : (0)    set >0 to run in non-interactive, text-only mode (suitable for scripting)
+-l, --dissolutionrate   : (1.0)  scaling factor for all dissolution times 
+-u, --drugdiffusionrate : (0.000001) physical rate of drug diffusion (in m/s2 ?)
+-k, --drugdiffusionrate : (0.000001) physical rate of excipient diffusion (in m/s2 ?)
+-y, --cellsize          : (0.001) physical size of a cell (in meters ?)
+-z, --timestep          : (0.001) elapsed time between iterations
+
 
 the ratio of released drug mass is printed as newline-separated values to the specified file path.
 
