@@ -90,11 +90,12 @@ public:
             f64 ddrug=7e-6,
             f64 dex=7e-6,
             u32 seed=47u,
-            f64 diss=1.0,
+            f64 dissprob=1.0,
             f64 disspoly=0.0,
             u32 shellWidth=1,
-            f64 polyshellbalance=2.0,
-            f64 bounddiffrate = 0.02
+            f64 polyshellbalance = 1.0,
+            f64 bounddiffrate = 0.02,
+            f64 dissratescale=1.0
             );
   ~CellModel(void);
   // set initial values, tablet shape, etc
@@ -168,6 +169,8 @@ public: // FIXME: many of these could be privatized
   u32 wShell;
   // polymer-shell "imbalance factor"
   f64 pShellBalance;
+  // dissolution rate scaling factor for all cells
+  f64 dissratescale;
   // diffusion weights given number of polymer neighbors
   static const f64 diffNMul[7];
   // dissolution steps given number of polymer neighbors

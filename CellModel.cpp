@@ -105,7 +105,8 @@ CellModel::CellModel(
                      f64 dpolyscale,
                      u32 shellwidth,
                      f64 polyshellbalance,
-                     f64 bounddiffrate
+                     f64 bounddiffrate,
+                     f64 dissScale
                      ) :
 #if USE_BOOST
 rngEngine(), rngDist(0.f, 1.f),
@@ -124,7 +125,8 @@ wShell(shellwidth),
 pPoly(ppoly),
 pDrug(pdrug),
 pShellBalance(polyshellbalance),
-boundDiff(bounddiffrate)
+boundDiff(bounddiffrate),
+dissratescale(dissScale)
 {
   
   cubeLength2 = cubeLength * cubeLength;

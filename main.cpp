@@ -66,6 +66,16 @@ static f64 polyShellBalance = 0.5;
 static f64 boundDiff = 0.9;
 // no-graphics mode
 static u8 nographics = 0;
+// drug diffusion rate;
+static f64 drugdiff = 0.000001;
+// excipient diffusion rate;
+static f64 exdiff = 0.000001;
+// dissolution time scaling;
+static f64 dissScale = 1.0;
+// cell size (in meters)
+static f64 cellsize = 0.001;
+//  time step size (in seconds)
+static f64 timestep = 0.001;
 // ncurses window pointer
 static WINDOW* win;
 
@@ -152,16 +162,17 @@ int main (const int argc, char* const* argv) {
                   h,     // cylinder height
                   pd,    // p drug
                   pp,    // p polymer
-                  0.001,  // cell size
-                  0.001,  // time step
-                  7e-6,   // drug diffusion constant
-                  7e-6,          // excipient diffusion constant
+                  cellsize,  // cell size
+                  timestep,  // time step
+                  drugdiff,   // drug diffusion constant
+                  exdiff,          // excipient diffusion constant
                   seed,          // RNG seed,
                   dissprob,    // dissolution probability scale,
                   disspolyscale, // dissolution probability -> polymer correlation factor,
                   polyShellWidth,       // shell width
                   polyShellBalance,  // shell balance
-                  boundDiff
+                  boundDiff,       // boundary diffusino factor (exponential)
+                  dissScale          // dissolution time scaling 
                   );
 	
   print(0, 0, "cube width %i, pd: %f, pp: %f", (int)n, pd, pp);
@@ -306,8 +317,8 @@ int parse_args(const int argc, char* const* argv) {
   static struct option long_options[] = {
     {"cubelength",        required_argument, 0, 'n'}, 
     {"maxiterations",		  required_argument, 0, 'c'},
-    {"polymer ratio",     required_argument, 0, 'p'},
-    {"drug ratio",        required_argument, 0, 'g'},
+    {"polymerratio",      required_argument, 0, 'p'},
+    {"drugratio",         required_argument, 0, 'g'},
     {"cylinderheight",	  required_argument, 0, 'h'},
     {"releasedfile",		  required_argument, 0, 'r'},
     {"statefile",         required_argument, 0, 's'},
@@ -321,13 +332,18 @@ int parse_args(const int argc, char* const* argv) {
     {"polyshellbalance",  required_argument, 0, 'b'},
     {"boundarydiffusion", required_argument, 0, 'f'},
     {"nographics",        required_argument, 0, 'x'},
+    {"drugdiffusionrate", required_argument, 0, 'u'},
+    {"exdiffusionrate",   required_argument, 0, 'k'},
+    {"dissolutionrate",   required_argument, 0, 'l'},
+    {"cellsize",          required_argument, 0, 'y'},
+    {"timestep",          required_argument, 0, 'z'},
     {0, 0, 0, 0}
   };
   
   int opt = 0;
   int opt_idx = 0;
   while (1) {
-    opt = getopt_long(argc, argv, "n:c:p:g:h:r:s:t:d:e:a:o:i:w:b:f:x:",
+    opt = getopt_long(argc, argv, "n:c:p:g:h:r:s:t:d:e:a:o:i:w:b:f:x:u:k:l:y:z:",
                       long_options, &opt_idx);
     if (opt == -1) { break; }
     
@@ -382,6 +398,22 @@ int parse_args(const int argc, char* const* argv) {
         break;
       case 'x':
         nographics = atoi(optarg);
+        break;
+      case 'u':
+        drugdiff = atof(optarg);
+        break;
+      case 'k':
+        exdiff = atof(optarg);
+        break;
+      case 'l':
+        dissScale = atof(optarg);
+        break;
+      case 'y':
+        cellsize = atof(optarg);
+        break;
+      case 'z':
+        timestep = atof(optarg);
+        break;
       default:
         break;
     }

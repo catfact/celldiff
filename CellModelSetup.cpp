@@ -119,7 +119,7 @@ void CellModel::setup(void) {
 			numCellsToProcess++;
 			
 			cells[i]->diffMul = diffNMul[np];
-			cells[i]->dissSteps = dissNSteps[np];
+			cells[i]->dissSteps = (u32)((f64)dissNSteps[np] * dissratescale);
 			cells[i]->dissInc = 1.0 / (f64)(cells[i]->dissSteps);
 			
 			//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

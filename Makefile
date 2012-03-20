@@ -1,7 +1,7 @@
 OBJ = main.o CellModel.o CellModelSetup.o
 
 CC = g++
-CFLAGS = -g
+CFLAGS = -g # -Wall
 # INC = -I/usr/local/boost_1_47_0
 # LIBS = -lpthread
 LIBS += -lncurses
