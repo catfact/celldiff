@@ -250,12 +250,12 @@ void CellModel::diffuse(const Cell* const cell) {
   
   // refactored:
   const f64 tmp = nw * dt_l2;
-  const f64 drugDiff = (dDrug * tmp * (cMeanDrug - cell->concentration[eStateDrug] * cell->diffMul));  
+  const f64 drugDiff = (dDrug  * cell->diffMul * tmp * (cMeanDrug - (cell->concentration[eStateDrug])));  
 	
   cellsUpdate[cell->idx]->concentration[eStateDrug] = cell->concentration[eStateDrug] + drugDiff;
 	
   cellsUpdate[cell->idx]->concentration[eStateEx] = cell->concentration[eStateEx]
-  + (dEx * tmp * (cMeanEx - cell->concentration[eStateEx]  * cell->diffMul));
+  + (dEx * cell->diffMul * tmp * (cMeanEx - cell->concentration[eStateEx]));
 }
 
 

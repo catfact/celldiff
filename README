@@ -19,9 +19,9 @@ celldiff arguments
 -f, --boundarydiffusion : (0.9)  exponential decay factor for concentrations in boundary cells
 -x, --nographics        : (0)    set >0 to run in non-interactive, text-only mode (suitable for scripting)
 -l, --dissolutionrate   : (1.0)  scaling factor for all dissolution times 
--u, --drugdiffusionrate : (0.000001) physical rate of drug diffusion (in m/s2 ?)
--k, --drugdiffusionrate : (0.000001) physical rate of excipient diffusion (in m/s2 ?)
--y, --cellsize          : (0.001) physical size of a cell (in meters ?)
+-u, --drugdiffusionrate : (0.000001) physical rate of drug diffusion (in m^2/s ?)
+-k, --drugdiffusionrate : (0.000001) physical rate of excipient diffusion (in m^2/s ?)
+-y, --cellsize          : (0.001) physical length of a cell (in meters ?)
 -z, --timestep          : (0.001) elapsed time between iterations
 
 
