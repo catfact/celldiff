@@ -220,9 +220,9 @@ int main (const int argc, char* const* argv) {
 		  // print model state data
 		  u64 cell;
 		  for(cell = 0; cell<model.numCells; cell++) {
-			  fprintf(stateOut, "\n%i", model.cells[cell]->state);
-			  fprintf(stateOut, "\t%f", model.cells[cell]->concentration[0]);
-			  fprintf(stateOut, "\t%f", model.cells[cell]->concentration[1]);
+			  fprintf(stateOut, "\n%i", model.cells[cell].state);
+			  fprintf(stateOut, "\t%f", model.cells[cell].concentration[0]);
+			  fprintf(stateOut, "\t%f", model.cells[cell].concentration[1]);
 		  }
       
 	  }
@@ -429,17 +429,17 @@ void printFrame(CellModel* model, u32 slice) {
     // print states
     for(u32 k=0; k<n; k++) {
       idx = i*n*n + j*n + k;
-      attron(COLOR_PAIR(model->cells[idx]->state + 1));
-      if ((model->cells[idx]->state == eStateWet) || (model->cells[idx]->state == eStateBound) ) {
-        mvprintw(6+j, k * 2, "%d0", (int)(model->cells[idx]->concentration[eStateDrug] * 99.0));
+      attron(COLOR_PAIR(model->cells[idx].state + 1));
+      if ((model->cells[idx].state == eStateWet) || (model->cells[idx].state == eStateBound) ) {
+        mvprintw(6+j, k * 2, "%d0", (int)(model->cells[idx].concentration[eStateDrug] * 99.0));
       } else {
         // if(model->cells[idx]->state == eStateDummy) {
         //   mvprintw(6+j, k * 2, "XX", model->cells[idx]->state);
         // } else {
-        mvprintw(6+j, k * 2, "%d ", model->cells[idx]->state);
+        mvprintw(6+j, k * 2, "%d ", model->cells[idx].state);
         // }
       }
-      attroff(COLOR_PAIR(model->cells[idx]->state + 1));
+      attroff(COLOR_PAIR(model->cells[idx].state + 1));
     }
   }
   refresh();

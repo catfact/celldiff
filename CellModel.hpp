@@ -53,7 +53,8 @@ enum eCellState {
 class Cell {
 public:
   // c-tor
-  Cell(u32 idx); 
+  //  Cell(u32 idx); 
+  Cell(); 
   // d-tor
   ~Cell();
 public:
@@ -73,8 +74,8 @@ public:
   f64 dissInc;
   // diffusion multiplier
   f64 diffMul;
-	// dissolution probability for this cell (function of NPN)
-	f64 dissProb;
+  // dissolution probability for this cell (function of NPN)
+  f64 dissProb;
   
 };
 
@@ -159,10 +160,10 @@ public: // FIXME: many of these could be privatized
   f64 trappedDrugMass;
   // a common intermediate multiplier
   f64 dt_l2;
-	// base dissolution probability
-	f64 dissprob;
-	// dissolution probability / NPN weighting
-	f64 disspolyscale;
+  // base dissolution probability
+  f64 dissprob;
+  // dissolution probability / NPN weighting
+  f64 disspolyscale;
   // boundary diffusion rate
   f64 boundDiff;
   // shell width in cells
@@ -176,10 +177,10 @@ public: // FIXME: many of these could be privatized
   // dissolution steps given number of polymer neighbors
   static const f64 dissNSteps[7];
   // flattened array of all cells
-  Cell**        cells;         
+  Cell *cells;         
   // copy for updating after iteration
-  Cell**        cellsUpdate;
-  // cells-to-process (drug, excip, water, diffusing, or immediate boundary) 
+  Cell *cellsUpdate;
+  // idx of cells-to-process (drug, excip, water, diffusing, or immediate boundary) 
   u32* cellsToProcess;
   u32 numCellsToProcess;
 	
