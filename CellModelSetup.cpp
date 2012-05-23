@@ -49,7 +49,7 @@ void CellModel::setup(void) {
   /////////////////
   
   //------- COMPRESS
-  this->compress();
+  // this->compress();
 	
 	// offset coordinates to get diagonals in 2x2x2
 	const u8 diags[4][3]	= { {0, 0, 0}, {0, 1, 1}, {1, 0, 1}, {1, 1, 0} };

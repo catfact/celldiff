@@ -214,7 +214,7 @@ eCellState CellModel::dissolve(const Cell* const cell) {
 eCellState CellModel::continueDissolve(const Cell* const cell) {
   cellsUpdate[cell->idx]->dissCount++;
   // FIXME: (?) careful, this concentration index is a nasty enum hack
-  cellsUpdate[cell->idx]->concentration[cell->state - 2] = cells[cell->idx]->concentration[cell->state - 2] + cell->dissInc;
+  // cellsUpdate[cell->idx]->concentration[cell->state - 2] = cells[cell->idx]->concentration[cell->state - 2] + cell->dissInc;
   if(cellsUpdate[cell->idx]->dissCount >= cell->dissSteps) {
     cellsUpdate[cell->idx]->state = eStateWet;
   }
@@ -296,7 +296,6 @@ f64 CellModel::iterate(void) {
         continueDissolve(cell);
         break;
       case eStateBound:
-        diffuse(cell);
         cell->concentration[0] *= boundDiff; // exponential decay
         cell->concentration[1] *= boundDiff;
         // denormal and saturate low
