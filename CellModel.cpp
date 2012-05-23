@@ -35,8 +35,7 @@ Cell::~Cell() {
 ///!!!!!!!!!!! tweakable: 
 //// constant diffusion multiplier given count of poly neighbors
 const f64 CellModel::diffNMul[7] = {
-
-// 1.0, 0.9, 0.1, 0.01, 0.001, 0.0, 0.0
+  // 1.0, 0.9, 0.1, 0.01, 0.001, 0.0, 0.0
 	1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0
 };
 
@@ -133,12 +132,12 @@ dissratescale(dissScale)
   numCells = cubeLength * cubeLength * cubeLength;
   dt_l2 = dt / (cellLength * cellLength);
   
-  cells =				new Cell* [numCells];
+  cells =		new Cell* [numCells];
   cellsUpdate =		new Cell* [numCells];
   cellsToProcess =	new u32 [numCells];
   
   for(u32 i=0; i<numCells; i++) {
-    cells[i] =			new Cell(i);
+    cells[i] =	        new Cell(i);
     cellsUpdate[i] =	new Cell(i);
   }
   // seed the random number engine
@@ -296,6 +295,7 @@ f64 CellModel::iterate(void) {
         continueDissolve(cell);
         break;
       case eStateBound:
+	//// TODO: optimize
         cell->concentration[0] *= boundDiff; // exponential decay
         cell->concentration[1] *= boundDiff;
         // denormal and saturate low
@@ -311,14 +311,13 @@ f64 CellModel::iterate(void) {
 	
   // update the cell data
   // FIXME: memcpy() in this function is eating 20% of CPU time.
-  // should be able to just swap pointers somehow...
-  
-  // (this is not cutting it)
+  // should be able to just swap pointers... 
+  // (why doesn't this work??)
   /*
    Cell** cellsTmp = cells;
    cells = cellsUpdate;
-   cellsUpdate = cellsTmp;
-   */
+   cellsUpdate = cellsTmp; 
+  */
   
   for(u32 i=0; i<numCellsToProcess; i++) {
     *(cells[cellsToProcess[i]]) = *(cellsUpdate[cellsToProcess[i]]);
