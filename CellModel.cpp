@@ -227,21 +227,34 @@ void CellModel::diffuse(const Cell* const cell) {
   f64 cMeanDrug = 0.f;
   f64 cMeanEx = 0.f;
   u8 nw = 0;
+  u8 dum=0;
 	
-  for(u8 i=0; i<NUM_NEIGHBORS; i++) {
-    if ((cells[cell->neighborIdx[i]]->state == eStateWet) || (cells[cell->neighborIdx[i]]->state == eStateBound)) {
-      nw++;
-      cMeanDrug += cells[cell->neighborIdx[i]]->concentration[eStateDrug];
-      cMeanEx += cells[cell->neighborIdx[i]]->concentration[eStateEx];
-    }
-  }
+	if (cell->state == eStateBound) {
+	  for(u8 i=0; i<NUM_NEIGHBORS; i++) {
+		if ((cells[cell->neighborIdx[i]]->state == eStateWet)) {
+		  nw++;
+		  cMeanDrug += cells[cell->neighborIdx[i]]->concentration[eStateDrug];
+		  cMeanEx += cells[cell->neighborIdx[i]]->concentration[eStateEx];
+		}
+	  }
+	  if (cMeanDrug > 0.0) {
+	  	dum++;
+	  }
+	} else {
+	  for(u8 i=0; i<NUM_NEIGHBORS; i++) {
+		if ((cells[cell->neighborIdx[i]]->state == eStateWet) || (cells[cell->neighborIdx[i]]->state == eStateBound)) {
+		  nw++;
+		  cMeanDrug += cells[cell->neighborIdx[i]]->concentration[eStateDrug];
+		  cMeanEx += cells[cell->neighborIdx[i]]->concentration[eStateEx];
+		}
+	  }
+   }
   // no wet neighbors => no effect
   if (nw == 0) { return; }
 	
   cMeanDrug /= nw;
   cMeanEx /= nw;
 	
-  
   //   cellsUpdate[cell->idx]->concentration[eStateDrug] = cell->concentration[eStateDrug]
   //   + (dDrug * nw / cellLength2 * (cMeanDrug - cell->concentration[eStateDrug]) * dt);
   
@@ -257,9 +270,6 @@ void CellModel::diffuse(const Cell* const cell) {
   cellsUpdate[cell->idx]->concentration[eStateEx] = cell->concentration[eStateEx]
   + (dEx * tmp * (cMeanEx - cell->concentration[eStateEx]  * cell->diffMul));
 }
-
-
-
 
 //---------- iterate!!
 f64 CellModel::iterate(void) {
@@ -283,7 +293,7 @@ f64 CellModel::iterate(void) {
         diffuse(cell);
         break;
       case eStateVoid:
-        // void cells: deissolve (FIXME?)
+        // void cells: dissolve (FIXME?)
         dissolve(cell);
         break;
       case eStateEx:
@@ -312,9 +322,8 @@ f64 CellModel::iterate(void) {
 	
   // update the cell data
   // FIXME: memcpy() in this function is eating 20% of CPU time.
-  // should be able to just swap pointers somehow...
-  
-  // (this is not cutting it)
+  // should be able to just swap pointers
+  // (why doesn't this work?)
   /*
    Cell** cellsTmp = cells;
    cells = cellsUpdate;

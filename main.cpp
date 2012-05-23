@@ -138,7 +138,6 @@ int main (const int argc, char* const* argv) {
   frameNum = n >> 1; // show center slice
   
   // finish setting up variables
-  pd = 0.1;
   
   FILE* releasedOut = fopen(releasedPath.c_str(), "w");
   if (releasedOut == NULL) {
