@@ -231,21 +231,36 @@ void CellModel::diffuse(const Cell* const cell) {
   f64 cMeanDrug = 0.f;
   f64 cMeanEx = 0.f;
   u8 nw = 0;
+//  u8 dum=0;
 	
-  for(u8 i=0; i<NUM_NEIGHBORS; i++) {
-    if ((cells[cell->neighborIdx[i]].state == eStateWet) || (cells[cell->neighborIdx[i]].state == eStateBound)) {
-      nw++;
-      cMeanDrug += cells[cell->neighborIdx[i]].concentration[eStateDrug];
-      cMeanEx += cells[cell->neighborIdx[i]].concentration[eStateEx];
-    }
-  }
+	if (cell->state == eStateBound) {
+	  for(u8 i=0; i<NUM_NEIGHBORS; i++) {
+		if ((cells[cell->neighborIdx[i]]->state == eStateWet)) {
+		  nw++;
+		  cMeanDrug += cells[cell->neighborIdx[i]]->concentration[eStateDrug];
+		  cMeanEx += cells[cell->neighborIdx[i]]->concentration[eStateEx];
+		}
+	  }
+	  /*
+	  if (cMeanDrug > 0.0) {
+	  	dum++;
+	  }
+	  */
+	} else {
+	  for(u8 i=0; i<NUM_NEIGHBORS; i++) {
+		if ((cells[cell->neighborIdx[i]]->state == eStateWet) || (cells[cell->neighborIdx[i]]->state == eStateBound)) {
+		  nw++;
+		  cMeanDrug += cells[cell->neighborIdx[i]]->concentration[eStateDrug];
+		  cMeanEx += cells[cell->neighborIdx[i]]->concentration[eStateEx];
+		}
+	  }
+   }
   // no wet neighbors => no effect
   if (nw == 0) { return; }
 	
   cMeanDrug /= nw;
   cMeanEx /= nw;
 	
-  
   //   cellsUpdate[cell->idx]->concentration[eStateDrug] = cell->concentration[eStateDrug]
   //   + (dDrug * nw / cellLength2 * (cMeanDrug - cell->concentration[eStateDrug]) * dt);
   
@@ -257,18 +272,10 @@ void CellModel::diffuse(const Cell* const cell) {
   const f64 drugDiff = (dDrug  * cell->diffMul * tmp * (cMeanDrug - (cell->concentration[eStateDrug])));  
 	
   cellsUpdate[cell->idx].concentration[eStateDrug] = cell->concentration[eStateDrug] + drugDiff;
-	
-<<<<<<< HEAD
+
   cellsUpdate[cell->idx].concentration[eStateEx] = cell->concentration[eStateEx]
     + (dEx * tmp * (cMeanEx - cell->concentration[eStateEx]  * cell->diffMul));
-=======
-  cellsUpdate[cell->idx]->concentration[eStateEx] = cell->concentration[eStateEx]
-  + (dEx * cell->diffMul * tmp * (cMeanEx - cell->concentration[eStateEx]));
->>>>>>> 562629a5a089e238c64cb2188b22edf9c8c1d713
 }
-
-
-
 
 //---------- iterate!!
 f64 CellModel::iterate(void) {
@@ -283,7 +290,6 @@ f64 CellModel::iterate(void) {
     cell = &(cells[cellsToProcess[i]]);
     // FIXME: processing order of these cases could be optimized
     switch(cell->state) {
-<<<<<<< HEAD
     case eStatePoly:
       // shouldn't get here!
       // polymer cells: no change
@@ -316,39 +322,6 @@ f64 CellModel::iterate(void) {
       break;
     default:
       break;
-=======
-        case eStatePoly:
-         // shouldn't get here!
-         // polymer cells: no change
-        dum++;
-         break;
-      case eStateWet:
-        diffuse(cell);
-        break;
-      case eStateVoid:
-        // void cells: deissolve (FIXME?)
-        dissolve(cell);
-        break;
-      case eStateEx:
-      case eStateDrug:
-        // drug or excipient: 
-        dissolve(cell);
-        break;
-      case eStateDissDrug:
-      case eStateDissEx:
-        continueDissolve(cell);
-        break;
-      case eStateBound:
-	//// TODO: optimize
-        cell->concentration[0] *= boundDiff; // exponential decay
-        cell->concentration[1] *= boundDiff;
-        // denormal and saturate low
-        if(cell->concentration[0] < 0.000000000001) cell->concentration[0] = 0.0;
-        if(cell->concentration[1] < 0.000000000001) cell->concentration[1] = 0.0;
-        break;
-      default:
-        break;
->>>>>>> 562629a5a089e238c64cb2188b22edf9c8c1d713
     }
   }
   
@@ -358,6 +331,7 @@ f64 CellModel::iterate(void) {
   // FIXME: memcpy() in this function is eating 20% of CPU time.
   // should be able to just swap pointers... 
   // (why doesn't this work??)
+
   /*
     Cell** cellsTmp = cells;
     cells = cellsUpdate;

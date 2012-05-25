@@ -138,7 +138,6 @@ int main (const int argc, char* const* argv) {
   frameNum = n >> 1; // show center slice
   
   // finish setting up variables
-  pd = 0.1;
   
   FILE* releasedOut = fopen(releasedPath.c_str(), "w");
   if (releasedOut == NULL) {
@@ -210,12 +209,7 @@ int main (const int argc, char* const* argv) {
       printFrame(&model, frameNum);
       frameStep = 0;
     }
-    
-    if( stateStep == statePeriod ) {
-      stateStep = 0;
-    }
-	  
-	  
+  
 	  if( (stateStep == 1) && (statePeriod != 0) ) {
 		  // print model state data
 		  u64 cell;
@@ -224,8 +218,11 @@ int main (const int argc, char* const* argv) {
 			  fprintf(stateOut, "\t%f", model.cells[cell].concentration[0]);
 			  fprintf(stateOut, "\t%f", model.cells[cell].concentration[1]);
 		  }
-      
 	  }
+	  
+    if( stateStep == statePeriod ) {
+      stateStep = 0;
+    }
     
     released[1] = model.iterate();
     dr = released[1] - released[0];
