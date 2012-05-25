@@ -227,7 +227,7 @@ void CellModel::diffuse(const Cell* const cell) {
   f64 cMeanDrug = 0.f;
   f64 cMeanEx = 0.f;
   u8 nw = 0;
-  u8 dum=0;
+  //  u8 dum=0;
 	
 	if (cell->state == eStateBound) {
 	  for(u8 i=0; i<NUM_NEIGHBORS; i++) {
@@ -237,9 +237,11 @@ void CellModel::diffuse(const Cell* const cell) {
 		  cMeanEx += cells[cell->neighborIdx[i]]->concentration[eStateEx];
 		}
 	  }
+	  /*
 	  if (cMeanDrug > 0.0) {
 	  	dum++;
 	  }
+	  */
 	} else {
 	  for(u8 i=0; i<NUM_NEIGHBORS; i++) {
 		if ((cells[cell->neighborIdx[i]]->state == eStateWet) || (cells[cell->neighborIdx[i]]->state == eStateBound)) {
