@@ -254,12 +254,17 @@ void CellModel::diffuse(const Cell* const cell) {
   
   // refactored:
   const f64 tmp = nw * dt_l2;
-  const f64 drugDiff = (dDrug * tmp * (cMeanDrug - cell->concentration[eStateDrug] * cell->diffMul));  
+  const f64 drugDiff = (dDrug  * cell->diffMul * tmp * (cMeanDrug - (cell->concentration[eStateDrug])));  
 	
   cellsUpdate[cell->idx].concentration[eStateDrug] = cell->concentration[eStateDrug] + drugDiff;
 	
+<<<<<<< HEAD
   cellsUpdate[cell->idx].concentration[eStateEx] = cell->concentration[eStateEx]
     + (dEx * tmp * (cMeanEx - cell->concentration[eStateEx]  * cell->diffMul));
+=======
+  cellsUpdate[cell->idx]->concentration[eStateEx] = cell->concentration[eStateEx]
+  + (dEx * cell->diffMul * tmp * (cMeanEx - cell->concentration[eStateEx]));
+>>>>>>> 562629a5a089e238c64cb2188b22edf9c8c1d713
 }
 
 
@@ -278,6 +283,7 @@ f64 CellModel::iterate(void) {
     cell = &(cells[cellsToProcess[i]]);
     // FIXME: processing order of these cases could be optimized
     switch(cell->state) {
+<<<<<<< HEAD
     case eStatePoly:
       // shouldn't get here!
       // polymer cells: no change
@@ -310,6 +316,39 @@ f64 CellModel::iterate(void) {
       break;
     default:
       break;
+=======
+        case eStatePoly:
+         // shouldn't get here!
+         // polymer cells: no change
+        dum++;
+         break;
+      case eStateWet:
+        diffuse(cell);
+        break;
+      case eStateVoid:
+        // void cells: deissolve (FIXME?)
+        dissolve(cell);
+        break;
+      case eStateEx:
+      case eStateDrug:
+        // drug or excipient: 
+        dissolve(cell);
+        break;
+      case eStateDissDrug:
+      case eStateDissEx:
+        continueDissolve(cell);
+        break;
+      case eStateBound:
+	//// TODO: optimize
+        cell->concentration[0] *= boundDiff; // exponential decay
+        cell->concentration[1] *= boundDiff;
+        // denormal and saturate low
+        if(cell->concentration[0] < 0.000000000001) cell->concentration[0] = 0.0;
+        if(cell->concentration[1] < 0.000000000001) cell->concentration[1] = 0.0;
+        break;
+      default:
+        break;
+>>>>>>> 562629a5a089e238c64cb2188b22edf9c8c1d713
     }
   }
   
