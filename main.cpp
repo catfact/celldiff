@@ -65,7 +65,7 @@ static f64 polyShellBalance = 1.0;
 // boundary decay factor
 static f64 boundDiff = 0.9;
 // no-graphics mode
-static u8 nographics = 0;
+static u8 nographics = 1;
 // drug diffusion rate;
 static f64 drugdiff = 0.000001;
 // excipient diffusion rate;
@@ -312,11 +312,11 @@ static void end_graphics(void) {
 int parse_args(const int argc, char* const* argv) {
   
   static struct option long_options[] = {
-    {"cubelength",        required_argument, 0, 'n'}, 
+    {"diameter",        required_argument, 0, 'n'}, 
     {"maxiterations",		  required_argument, 0, 'c'},
     {"polymerratio",      required_argument, 0, 'p'},
     {"drugratio",         required_argument, 0, 'g'},
-    {"cylinderheight",	  required_argument, 0, 'h'},
+    {"tabletheight",	  required_argument, 0, 'h'},
     {"releasedfile",		  required_argument, 0, 'r'},
     {"statefile",         required_argument, 0, 's'},
     {"stateperiod",       required_argument, 0, 't'},

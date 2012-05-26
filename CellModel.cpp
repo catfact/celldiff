@@ -320,7 +320,7 @@ f64 CellModel::iterate(void) {
     }
   }
   
-  ///// TODO: join udpate threads here
+  ///// TODO: synchronize udpate threads here
 	
   // update the cell data
   // FIXME: memcpy() in this function is eating 20% of CPU time.
@@ -337,7 +337,7 @@ f64 CellModel::iterate(void) {
   }
   
 	
-  ///// TODO: join copy threads here
+  ///// TODO: synchronize copy threads here
 	
   calcDrugMass();
   
