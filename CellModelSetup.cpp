@@ -16,14 +16,14 @@ using namespace std;
 //// top-level setup function. initializes cell type data
 void CellModel::setup(void) {
   //////////// DEBUG
-    
+  /*
   u32 stateCount[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
   u32 cellsInTablet = 0;
   f64 drugCountRatio, polyCountRatio;
   f64 exCountRatio, voidCountRatio;
   u32 cellsAdjoining = 0;
   u8 dum=0;
-  
+   */
   ////////////
   
   
@@ -122,12 +122,13 @@ void CellModel::setup(void) {
       cells[i]->dissSteps = (u32)((f64)dissNSteps[np] * dissratescale);
       cells[i]->dissInc = 1.0 / (f64)(cells[i]->dissSteps);
 			
-      //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      // scale this cell's dissolution probabilty by NPN.. 
-      // something like this?
-      const f64 npscale = ((NUM_NEIGHBORS - np) / NUM_NEIGHBORS);
-      cells[i]->dissProb = (dissprob * npscale * disspolyscale) + (dissprob * (1.0 - disspolyscale));
-      //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      // set dissolution probability depending on cell type
+      if(cells[i]->state == eStateDrug) {
+         cells[i]->dissProb = dissProbDrug;
+      }
+      if(cells[i]->state == eStateEx) {
+        cells[i]->dissProb = dissProbEx;
+      }
     }
   }
 	
@@ -161,9 +162,6 @@ void CellModel::setup(void) {
 
 //// cell type distribution (on 8-cell blocks)
 void CellModel::distribute(void) {
-  //  unsigned long int* polyIdx = new unsigned long int[nPoly]; // array of polymer cell idx
-  //  unsigned long int* drugIdx = new unsigned long int[nDrug]; // array of drug cell idx
-  
   u32 i, j, k;      // temp cartesian coordinates
   u32 cX, cY, cZ;   // center of cylinder
   u32 cubeR2;       // squared radius of cylinder
@@ -213,8 +211,6 @@ void CellModel::distribute(void) {
             || (k < loBoundH)
             || (k > hiBoundH)
             || (r2 >= cubeR2) ) {
- 
-	  //        if(r2 >= cubeR2) {
           // exterior cells
           this->setBlockState(idx, eStateBound);
         } // end outside-cylinder
@@ -256,7 +252,6 @@ void CellModel::distribute(void) {
   }
   u32 nPolyInTablet = nPolyBlocks - nPolyInShell;
   nPolyInTablet = min((unsigned int)nPolyInTablet, (unsigned int)(tabletIdx.size()));
-  
   
   ///// DEBUG
   /*

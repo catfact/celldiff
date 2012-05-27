@@ -28,7 +28,7 @@ using namespace std;
 //=======  variables
 static f64 noChangeMassThresh = 0.00001;
 static u32 noChangeCountThresh = 100;
-// length of cube
+// diameter of computation domain
 static u32 n = 32;
 // current iteration count
 static u32 iterationCount = 0;
@@ -40,7 +40,7 @@ static u32 framePeriod = 1;
 static u32 frameNum = 0;
 // concentrations
 static f64 pd=0.1, pp=0.4;
-// cylinder height
+// tablet height
 static f64 h=0.23;
 // RNG seed
 static u32 seed = 47;
@@ -54,8 +54,10 @@ static u32 statePeriod = 0;
 static u32 stateStep = 0;
 // ascii output toggle
 static u32 asciiout = 1;
-// dissolution probability scale (denominator == dissprob * numneighbors)
-static f64 dissprob = 1;
+// dissolution probability scale (drug)
+static f64 dissprobdrug = 1.0;
+// dissolution probability scale (excipient)
+static f64 dissprobex = 1.0;
 // dissolution prob / polymer correlation factor
 static f64 disspolyscale = 0.0;
 // width of polymer shell
@@ -65,7 +67,7 @@ static f64 polyShellBalance = 1.0;
 // boundary decay factor
 static f64 boundDiff = 0.9;
 // no-graphics mode
-static u8 nographics = 0;
+static u8 nographics = 1;
 // drug diffusion rate;
 static f64 drugdiff = 0.000001;
 // excipient diffusion rate;
@@ -166,8 +168,8 @@ int main (const int argc, char* const* argv) {
                   drugdiff,   // drug diffusion constant
                   exdiff,          // excipient diffusion constant
                   seed,          // RNG seed,
-                  dissprob,    // dissolution probability scale,
-                  disspolyscale, // dissolution probability -> polymer correlation factor,
+                  dissprobdrug,    // dissolution probability scale (drug)
+                  dissprobex,    // dissolution probability scale (excipient)
                   polyShellWidth,       // shell width
                   polyShellBalance,  // shell balance
                   boundDiff,       // boundary diffusino factor (exponential)
@@ -323,15 +325,14 @@ int parse_args(const int argc, char* const* argv) {
     {"nochangecount",		  required_argument, 0, 'd'},
     {"seed",              required_argument, 0, 'e'},
     {"asciiperiod",       required_argument, 0, 'a'},
-    {"dissdenom",         required_argument, 0, 'o'},
-    {"disspolyscale",		  required_argument, 0, 'i'},
+    {"dissprobdrug",      required_argument, 0, 'o'},
+    {"dissprobex",        required_argument, 0, 'l'},
     {"polyshellwidth",	  required_argument, 0, 'w'},
     {"polyshellbalance",  required_argument, 0, 'b'},
     {"boundarydiffusion", required_argument, 0, 'f'},
     {"nographics",        required_argument, 0, 'x'},
     {"drugdiffusionrate", required_argument, 0, 'u'},
     {"exdiffusionrate",   required_argument, 0, 'k'},
-    {"dissolutionrate",   required_argument, 0, 'l'},
     {"cellsize",          required_argument, 0, 'y'},
     {"timestep",          required_argument, 0, 'z'},
     {0, 0, 0, 0}
@@ -340,7 +341,7 @@ int parse_args(const int argc, char* const* argv) {
   int opt = 0;
   int opt_idx = 0;
   while (1) {
-    opt = getopt_long(argc, argv, "n:c:p:g:h:r:s:t:d:e:a:o:i:w:b:f:x:u:k:l:y:z:",
+    opt = getopt_long(argc, argv, "n:c:p:g:h:r:s:t:d:e:a:o:l:w:b:f:x:u:k:y:z:",
                       long_options, &opt_idx);
     if (opt == -1) { break; }
     
@@ -379,10 +380,10 @@ int parse_args(const int argc, char* const* argv) {
         framePeriod = atoi(optarg);
         break;
       case 'o':
-        dissprob = atof(optarg);
+        dissprobdrug = atof(optarg);
         break;
-      case 'i':
-        disspolyscale = atof(optarg);
+      case 'l':
+        dissprobex = atof(optarg);
         break;
       case 'w':
         polyShellWidth = atoi(optarg);
@@ -401,9 +402,6 @@ int parse_args(const int argc, char* const* argv) {
         break;
       case 'k':
         exdiff = atof(optarg);
-        break;
-      case 'l':
-        dissScale = atof(optarg);
         break;
       case 'y':
         cellsize = atof(optarg);

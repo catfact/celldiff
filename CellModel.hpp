@@ -90,8 +90,8 @@ public:
             f64 ddrug=7e-6,
             f64 dex=7e-6,
             u32 seed=47u,
-            f64 dissprob=1.0,
-            f64 disspoly=0.0,
+            f64 dissprobdrug=1.0,
+            f64 dissprobex=1.0,
             u32 shellWidth=1,
             f64 polyshellbalance = 1.0,
             f64 bounddiffrate = 0.02,
@@ -159,10 +159,10 @@ public: // FIXME: many of these could be privatized
   f64 trappedDrugMass;
   // a common intermediate multiplier
   f64 dt_l2;
-	// base dissolution probability
-	f64 dissprob;
-	// dissolution probability / NPN weighting
-	f64 disspolyscale;
+	// dissolution probability (drug)
+	f64 dissProbDrug;
+	// dissolution probability (excipient)
+	f64 dissProbEx;
   // boundary diffusion rate
   f64 boundDiff;
   // shell width in cells

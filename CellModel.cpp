@@ -35,8 +35,6 @@ Cell::~Cell() {
 ///!!!!!!!!!!! tweakable: 
 //// constant diffusion multiplier given count of poly neighbors
 const f64 CellModel::diffNMul[7] = {
-
-// 1.0, 0.9, 0.1, 0.01, 0.001, 0.0, 0.0
 	1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0
 };
 
@@ -101,8 +99,8 @@ CellModel::CellModel(
                      f64 ddrug,
                      f64 dex,
                      u32 seed,
-                     f64 dprob,
-                     f64 dpolyscale,
+                     f64 dprobdrug,
+                     f64 dprobex,
                      u32 shellwidth,
                      f64 polyshellbalance,
                      f64 bounddiffrate,
@@ -126,7 +124,9 @@ pPoly(ppoly),
 pDrug(pdrug),
 pShellBalance(polyshellbalance),
 boundDiff(bounddiffrate),
-dissratescale(dissScale)
+dissratescale(dissScale),
+dissProbDrug(dprobdrug),
+dissProbEx(dprobex)
 {
   
   cubeLength2 = cubeLength * cubeLength;
@@ -148,8 +148,6 @@ dissratescale(dissScale)
 #else
   srand((u32)seed);
 #endif
-	dissprob = dprob / NUM_NEIGHBORS;
-	disspolyscale = dpolyscale;
 }
 
 //------ d-tor
@@ -191,8 +189,7 @@ eCellState CellModel::dissolve(const Cell* const cell) {
   }
   
   // dissolve randomly
-  //  if (getRand() < ((nw - sumC) / (float)DISS_DENOM)) {
-  if (getRand() < ((nw - sumC) * cell->dissProb)) {
+  if (getRand() < ((1 - (sumC / (f64)nw)) * cell->dissProb)) {
     if (cell->state == eStateDrug) {
       cellsUpdate[cell->idx]->state = eStateDissDrug;
       cellsUpdate[cell->idx]->dissCount = 0;
@@ -202,7 +199,6 @@ eCellState CellModel::dissolve(const Cell* const cell) {
       cellsUpdate[cell->idx]->dissCount = 0;
     }
     if (cell->state == eStateVoid) {
-      // FIXME: should void cells "dissolve" gradually?
       cellsUpdate[cell->idx]->state = eStateWet;
     }		
   }
@@ -335,7 +331,6 @@ f64 CellModel::iterate(void) {
   for(u32 i=0; i<numCellsToProcess; i++) {
     *(cells[cellsToProcess[i]]) = *(cellsUpdate[cellsToProcess[i]]);
   }
-  
 	
   ///// TODO: join copy threads here
 	
@@ -349,7 +344,6 @@ void CellModel::calcDrugMass(void) {
   // calculate current drug mass
   // FIXME: this is the slow way to do it.
   // better to update during the diffusion step, and save a loop
-  // tryingfor accuracy first.
   Cell* cell;	
   drugMass = trappedDrugMass;
 	
