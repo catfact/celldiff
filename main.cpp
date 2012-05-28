@@ -30,8 +30,10 @@ static f64 noChangeMassThresh = 0.00001;
 static u32 noChangeCountThresh = 100;
 // diameter of computation domain
 static u32 n = 32;
-// current iteration count
-static u32 iterationCount = 0;
+// maximum simulation time
+static f64 maxtime = 100.0;
+// max iterations count
+static u32 iterationCount;
 // current animation frame step
 static u32 frameStep = 0;
 // animation frame period
@@ -125,7 +127,6 @@ int main (const int argc, char* const* argv) {
   // set default variables
   releasedPath = "diff_release_" + timetag.str() + ".txt";
   statePath = "diff_state_" + timetag.str() + ".txt";
-  iterationCount = 100;
 	
   // return something if --help passed?
   int parsed = parse_args(argc, argv);
@@ -176,6 +177,9 @@ int main (const int argc, char* const* argv) {
   print(0, 0, "cube width %i, pd: %f, pp: %f", (int)n, pd, pp);
   if(nographics) {} else { print(1, 0, "initializing..."); }
   model.setup();
+  
+  iterationCount = (u32)(maxtime / model.dt);
+  
   
   print(2, 0, "cell memory is %d bytes", model.numCells * sizeof(Cell));
   if(nographics) {
@@ -313,7 +317,7 @@ int parse_args(const int argc, char* const* argv) {
   
   static struct option long_options[] = {
     {"cubelength",        required_argument, 0, 'n'}, 
-    {"maxiterations",		  required_argument, 0, 'c'},
+    {"maxtime",		        required_argument, 0, 'c'},
     {"polymerratio",      required_argument, 0, 'p'},
     {"drugratio",         required_argument, 0, 'g'},
     {"cylinderheight",	  required_argument, 0, 'h'},
@@ -347,7 +351,7 @@ int parse_args(const int argc, char* const* argv) {
         n = atoi(optarg);
         break;
       case 'c':
-        iterationCount = atoi(optarg);
+        maxtime = atof(optarg);
         break;
       case 'p' :
         pp = atof(optarg);

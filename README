@@ -2,7 +2,7 @@
 celldiff arguments
 
 -n, --diameter          : (32)   diameter of the computation domain (in number of cells)
--c, --maxiterations     : (100)  maximum iterations to perform before stopping
+-c, --maxtime           : (100)  maximum time (in seconds) to simulate before halting
 -p, --polymer           : (0.3)  polymer concentration in [0, 1]
 -g, --drug              : (0.1)  drug concentration in [0, 1]
 -h, --tabletheight      : (0.23) height of tablet as a ratio of diameter
