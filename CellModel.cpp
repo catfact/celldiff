@@ -30,9 +30,6 @@ Cell::~Cell() {
 //================================================================
 // ===== CellModel
 
-
-///!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-///!!!!!!!!!!! tweakable: 
 //// constant diffusion multiplier given count of poly neighbors
 const f64 CellModel::diffNMul[7] = {
 	1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0
@@ -42,7 +39,6 @@ const f64 CellModel::diffNMul[7] = {
 const f64 CellModel::dissNSteps[7] = {	
 	10, 10, 10, 10, 10, 10, 10
 };
-//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 // index <-> coordinate conversion
 u32 CellModel::subToIdx(const u32 x,
@@ -95,7 +91,6 @@ CellModel::CellModel(
                      f64 pdrug,
                      f64 ppoly,
                      f64 cl,
-                     f64 dT,
                      f64 ddrug,
                      f64 dex,
                      u32 seed,
@@ -112,7 +107,6 @@ rngEngine(), rngDist(0.f, 1.f),
 cubeLength(n),
 cylinderHeight(h),
 cellLength(cl),
-dt(dT),
 dDrug(ddrug),
 dEx(dex),
 drugMassTotal(0.0),
@@ -128,11 +122,12 @@ dissratescale(dissScale),
 dissProbDrug(dprobdrug),
 dissProbEx(dprobex)
 {
+  cellLength *= 0.5;
   
   cubeLength2 = cubeLength * cubeLength;
   numCells = cubeLength * cubeLength * cubeLength;
-  dt_l2 = dt / (cellLength * cellLength);
   
+  // allocate cell memory 
   cells =				new Cell* [numCells];
   cellsUpdate =		new Cell* [numCells];
   cellsToProcess =	new u32 [numCells];
@@ -220,74 +215,76 @@ eCellState CellModel::continueDissolve(const Cell* const cell) {
 
 // calculate diffusion for fully-dissolved cells
 void CellModel::diffuse(const Cell* const cell) {
-  f64 cMeanDrug = 0.f;
-  f64 cMeanEx = 0.f;
+  f64 cSumDrug = 0.f;
+  f64 cSumEx = 0.f;
   u8 nw = 0;
-  //  u8 dum=0;
 	
 	if (cell->state == eStateBound) {
 	  for(u8 i=0; i<NUM_NEIGHBORS; i++) {
-		if ((cells[cell->neighborIdx[i]]->state == eStateWet)) {
-		  nw++;
-		  cMeanDrug += cells[cell->neighborIdx[i]]->concentration[eStateDrug];
-		  cMeanEx += cells[cell->neighborIdx[i]]->concentration[eStateEx];
-		}
+      if ((cells[cell->neighborIdx[i]]->state == eStateWet)) {
+        nw++;
+        cSumDrug += cells[cell->neighborIdx[i]]->concentration[eStateDrug];
+        cSumEx += cells[cell->neighborIdx[i]]->concentration[eStateEx];
+      }
 	  }
-	  /*
-	  if (cMeanDrug > 0.0) {
-	  	dum++;
-	  }
-	  */
 	} else {
 	  for(u8 i=0; i<NUM_NEIGHBORS; i++) {
-		if ((cells[cell->neighborIdx[i]]->state == eStateWet) || (cells[cell->neighborIdx[i]]->state == eStateBound)) {
-		  nw++;
-		  cMeanDrug += cells[cell->neighborIdx[i]]->concentration[eStateDrug];
-		  cMeanEx += cells[cell->neighborIdx[i]]->concentration[eStateEx];
-		}
+      if ((cells[cell->neighborIdx[i]]->state == eStateWet) || (cells[cell->neighborIdx[i]]->state == eStateBound)) {
+        nw++;
+        cSumDrug += cells[cell->neighborIdx[i]]->concentration[eStateDrug];
+        cSumEx += cells[cell->neighborIdx[i]]->concentration[eStateEx];
+      }
 	  }
    }
+  
   // no wet neighbors => no effect
   if (nw == 0) { return; }
-	
-  cMeanDrug /= nw;
-  cMeanEx /= nw;
-	
-  //   cellsUpdate[cell->idx]->concentration[eStateDrug] = cell->concentration[eStateDrug]
-  //   + (dDrug * nw / cellLength2 * (cMeanDrug - cell->concentration[eStateDrug]) * dt);
   
-  //    cellsUpdate[cell->idx]->concentration[eStateEx] = cell->concentration[eStateEx]
-  //   + (dEx * nw / cellLength2 * (cMeanEx - cell->concentration[eStateEx]) * dt);
+  cellsUpdate[cell->idx]->concentration[eStateDrug] = cell->concentration[eStateDrug]
+    + ((cSumDrug - (nw * cell->concentration[eStateDrug])) * dDrug);
   
-  // refactored:
-  const f64 tmp = nw * dt_l2;
-  const f64 drugDiff = (dDrug * tmp * (cMeanDrug - cell->concentration[eStateDrug] * cell->diffMul));  
-	
-  cellsUpdate[cell->idx]->concentration[eStateDrug] = cell->concentration[eStateDrug] + drugDiff;
-	
   cellsUpdate[cell->idx]->concentration[eStateEx] = cell->concentration[eStateEx]
-  + (dEx * tmp * (cMeanEx - cell->concentration[eStateEx]  * cell->diffMul));
+    + ((cSumEx - (nw * cell->concentration[eStateEx])) * dEx);
+  
+  ////// DEBUG
+  if (cellsUpdate[cell->idx]->concentration[eStateDrug] > 1.0) {
+    const f64 conc = cellsUpdate[cell->idx]->concentration[eStateDrug];
+    f64 theconc = conc;
+  }
+  /////////////
+  
+  // old: 
+  /*
+   cMeanDrug /= nw;
+   cMeanEx /= nw;
+   
+   //   cellsUpdate[cell->idx]->concentration[eStateDrug] = cell->concentration[eStateDrug]
+   //   + (dDrug * nw / cellLength2 * (cMeanDrug - cell->concentration[eStateDrug]) * dt);
+   
+   //    cellsUpdate[cell->idx]->concentration[eStateEx] = cell->concentration[eStateEx]
+   //   + (dEx * nw / cellLength2 * (cMeanEx - cell->concentration[eStateEx]) * dt);
+   
+   // refactored:
+   const f64 tmp = nw * dt_l2;
+   const f64 drugDiff = (dDrug * tmp * (cMeanDrug - cell->concentration[eStateDrug] * cell->diffMul));  
+   
+   cellsUpdate[cell->idx]->concentration[eStateDrug] = cell->concentration[eStateDrug] + drugDiff;
+   
+   cellsUpdate[cell->idx]->concentration[eStateEx] = cell->concentration[eStateEx]
+   + (dEx * tmp * (cMeanEx - cell->concentration[eStateEx]  * cell->diffMul));
+   */   
 }
 
 //---------- iterate!!
 f64 CellModel::iterate(void) {
   Cell* cell;
-  ///////// DEBUG
-  u8 dum=0;
-  //////////
   
   /////// TODO: incorporate threading engine. debugging single-threaded version first...
 	
   for (u32 i=0; i<numCellsToProcess; i++) {
     cell = cells[cellsToProcess[i]];
-    // FIXME: processing order of these cases could be optimized
     switch(cell->state) {
-        case eStatePoly:
-         // shouldn't get here!
-         // polymer cells: no change
-        dum++;
-         break;
-      case eStateWet:
+              case eStateWet:
         diffuse(cell);
         break;
       case eStateVoid:
@@ -311,6 +308,10 @@ f64 CellModel::iterate(void) {
         if(cell->concentration[0] < 0.000000000001) cell->concentration[0] = 0.0;
         if(cell->concentration[1] < 0.000000000001) cell->concentration[1] = 0.0;
         break;
+      case eStatePoly:
+        // shouldn't get here!
+        // polymer cells: no change
+        break;        
       default:
         break;
     }

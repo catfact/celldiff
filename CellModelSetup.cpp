@@ -17,12 +17,12 @@ using namespace std;
 void CellModel::setup(void) {
   //////////// DEBUG
   /*
-  u32 stateCount[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
-  u32 cellsInTablet = 0;
-  f64 drugCountRatio, polyCountRatio;
-  f64 exCountRatio, voidCountRatio;
-  u32 cellsAdjoining = 0;
-  u8 dum=0;
+   u32 stateCount[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+   u32 cellsInTablet = 0;
+   f64 drugCountRatio, polyCountRatio;
+   f64 exCountRatio, voidCountRatio;
+   u32 cellsAdjoining = 0;
+   u8 dum=0;
    */
   ////////////
   
@@ -32,20 +32,20 @@ void CellModel::setup(void) {
   
   ////////// DEBUG
   /*
-  // another loop over all cells to verify final cell distribution count
-  for(u8 s=0; s<8; s++) { stateCount[s] = 0; }
-  for (u32 n=0; n<numCells; n++) {
-  stateCount[cells[n]->state]++;
-  }
-  // easier-to-read totals
-  cellsInTablet   = stateCount[eStateDrug] + stateCount[eStateEx] + stateCount[eStatePoly] + stateCount[eStateVoid];
-  drugCountRatio  = (f64)stateCount[eStateDrug] / (f64)cellsInTablet;
-  polyCountRatio  = (f64)stateCount[eStatePoly] / (f64)cellsInTablet;
-  exCountRatio    = (f64)stateCount[eStateEx] / (f64)cellsInTablet;
-  voidCountRatio  = (f64)stateCount[eStateVoid] / (f64)cellsInTablet;
-  // debugger hook
-  dum++;
-  */
+   // another loop over all cells to verify final cell distribution count
+   for(u8 s=0; s<8; s++) { stateCount[s] = 0; }
+   for (u32 n=0; n<numCells; n++) {
+   stateCount[cells[n]->state]++;
+   }
+   // easier-to-read totals
+   cellsInTablet   = stateCount[eStateDrug] + stateCount[eStateEx] + stateCount[eStatePoly] + stateCount[eStateVoid];
+   drugCountRatio  = (f64)stateCount[eStateDrug] / (f64)cellsInTablet;
+   polyCountRatio  = (f64)stateCount[eStatePoly] / (f64)cellsInTablet;
+   exCountRatio    = (f64)stateCount[eStateEx] / (f64)cellsInTablet;
+   voidCountRatio  = (f64)stateCount[eStateVoid] / (f64)cellsInTablet;
+   // debugger hook
+   dum++;
+   */
   /////////////////
   
   //------- COMPRESS
@@ -68,51 +68,51 @@ void CellModel::setup(void) {
     findNeighbors(cells[i]);
     proc=0;
     switch (cells[i]->state) {
-    case eStatePoly:
-      proc = 0;
-      break;
-    case eStateDrug:
-      proc = 1;
-      drugMassTotal += 1.0;
-      break;
-    case eStateEx:
-      proc = 1;
-      break;
-    case eStateVoid:
-      proc = 1;
-      // printf("{ %d, %d } ; ", (int)numCellsToProcess, (int)cells[i]->idx);
-      break;
-    case eStateBound:
-      // want to process boundary cells only if they adjoin a non-boundary, non-poly
-      for(u8 ni = 0; ni<NUM_NEIGHBORS; ni++) {
-	tmpState = cells[cells[i]->neighborIdx[ni]]->state;
-	proc |= ((tmpState == eStateDrug) || (tmpState == eStateEx) || (tmpState == eStateVoid));
-      }
-      ////// DEBUG:
-      // if(proc) { cellsAdjoining++; }
-      //  dum++;
-      /////////
-      break;
-    default:
-      proc = 0;
-      break;
+      case eStatePoly:
+        proc = 0;
+        break;
+      case eStateDrug:
+        proc = 1;
+        drugMassTotal += 1.0;
+        break;
+      case eStateEx:
+        proc = 1;
+        break;
+      case eStateVoid:
+        proc = 1;
+        // printf("{ %d, %d } ; ", (int)numCellsToProcess, (int)cells[i]->idx);
+        break;
+      case eStateBound:
+        // want to process boundary cells only if they adjoin a non-boundary, non-poly
+        for(u8 ni = 0; ni<NUM_NEIGHBORS; ni++) {
+          tmpState = cells[cells[i]->neighborIdx[ni]]->state;
+          proc |= ((tmpState == eStateDrug) || (tmpState == eStateEx) || (tmpState == eStateVoid));
+        }
+        ////// DEBUG:
+        // if(proc) { cellsAdjoining++; }
+        //  dum++;
+        /////////
+        break;
+      default:
+        proc = 0;
+        break;
     }
     
     if(proc) { 	
       // find neighbors-with-polymer count
       u8 np = 0;
       for(u8 nb=0; nb<NUM_NEIGHBORS; nb++) {
-	if ( cells[cells[i]->neighborIdx[nb]]->state == eStatePoly ) {
-	  np++;
-	}
+        if ( cells[cells[i]->neighborIdx[nb]]->state == eStatePoly ) {
+          np++;
+        }
       }
 			
       // don't need to process if cell is trapped by polymer
       if (np > 5) {
-	if(cells[i]->state == eStateDrug) {
-	  trappedDrugMass += 1.0;
-	}
-	continue;
+        if(cells[i]->state == eStateDrug) {
+          trappedDrugMass += 1.0;
+        }
+        continue;
       }
 			
       cellsToProcess[numCellsToProcess] = cells[i]->idx;
@@ -124,10 +124,13 @@ void CellModel::setup(void) {
 			
       // set dissolution probability depending on cell type
       if(cells[i]->state == eStateDrug) {
-         cells[i]->dissProb = dissProbDrug;
+        cells[i]->dissProb = dissProbDrug;
       }
       if(cells[i]->state == eStateEx) {
         cells[i]->dissProb = dissProbEx;
+      }
+      if(cells[i]->state == eStateVoid) {
+        cells[i]->dissProb = 1.0;
       }
     }
   }
@@ -138,22 +141,32 @@ void CellModel::setup(void) {
   }
   drugMass = drugMassTotal;
   
+  // calculate time step for user-supplied diffusion rates
+  
+  const f64 maxDiff = max(dDrug, dEx);
+  dt = cellLength * cellLength / maxDiff;
+  dt *= NUM_NEIGHBORS_R;
+  dDrug /= maxDiff;
+  dEx /= maxDiff;
+  dDrug *= NUM_NEIGHBORS_R;
+  dEx *= NUM_NEIGHBORS_R;
+  
   ////////// DEBUG
   /*  
-  // another loop over all cells to verify final cell distribution count
-  for(u8 s=0; s<8; s++) { stateCount[s] = 0; }
-  for (u32 n=0; n<numCells; n++) {
-    stateCount[cells[n]->state]++;
-  }
-  // easier-to-read totals
-  cellsInTablet   = stateCount[eStateDrug] + stateCount[eStateEx] + stateCount[eStatePoly] + stateCount[eStateVoid];
-  drugCountRatio  = (f64)stateCount[eStateDrug] / (f64)cellsInTablet;
-  polyCountRatio  = (f64)stateCount[eStatePoly] / (f64)cellsInTablet;
-  exCountRatio    = (f64)stateCount[eStateEx] / (f64)cellsInTablet;
-  voidCountRatio  = (f64)stateCount[eStateVoid] / (f64)cellsInTablet;
-  // debugger hook
-  dum++;
-  */
+   // another loop over all cells to verify final cell distribution count
+   for(u8 s=0; s<8; s++) { stateCount[s] = 0; }
+   for (u32 n=0; n<numCells; n++) {
+   stateCount[cells[n]->state]++;
+   }
+   // easier-to-read totals
+   cellsInTablet   = stateCount[eStateDrug] + stateCount[eStateEx] + stateCount[eStatePoly] + stateCount[eStateVoid];
+   drugCountRatio  = (f64)stateCount[eStateDrug] / (f64)cellsInTablet;
+   polyCountRatio  = (f64)stateCount[eStatePoly] / (f64)cellsInTablet;
+   exCountRatio    = (f64)stateCount[eStateEx] / (f64)cellsInTablet;
+   voidCountRatio  = (f64)stateCount[eStateVoid] / (f64)cellsInTablet;
+   // debugger hook
+   dum++;
+   */
   /////////////////
   
 }
@@ -255,11 +268,11 @@ void CellModel::distribute(void) {
   
   ///// DEBUG
   /*
-  if ((nPolyInShell + nPolyInTablet) != nPolyBlocks) {
-    int dum = 0;
-    dum++;
-  }
-  */
+   if ((nPolyInShell + nPolyInTablet) != nPolyBlocks) {
+   int dum = 0;
+   dum++;
+   }
+   */
   /////////////
   
   u32 n;
@@ -267,7 +280,7 @@ void CellModel::distribute(void) {
     polyIdx.push_back(shellIdx.back());
     shellIdx.pop_back();
   }
-
+  
   for(n=0; n < nPolyInTablet; n++) {
     polyIdx.push_back(tabletIdx.back());
     tabletIdx.pop_back();
@@ -336,46 +349,46 @@ void CellModel::compress(void) {
           
           for (u8 n=0; n < NUM_NEIGHBORS; n++) {
             switch(n) { 
-	    case 0:
-	      nIdxBase[0] = i+2;
-	      nIdxBase[1] = j;
-	      nIdxBase[2] = k;
-	      break;
-	    case 1:
-	      nIdxBase[0] = i-2;
-	      nIdxBase[1] = j;
-	      nIdxBase[2] = k;
-	      break;
-	    case 2:
-	      nIdxBase[0] = i;
-	      nIdxBase[1] = j+2;
-	      nIdxBase[2] = k;
-	      break;
-	    case 3:
-	      nIdxBase[0] = i;
-	      nIdxBase[1] = j-2;
-	      nIdxBase[2] = k;
-	      break;
-	    case 4:
-	      nIdxBase[0] = i;
-	      nIdxBase[1] = j;
-	      nIdxBase[2] = k+2;
-	      break;
-	    case 5:
-	      nIdxBase[0] = i;
-	      nIdxBase[1] = j;
-	      nIdxBase[2] = k-2;
-	      break;
-	    default:
-	      nIdxBase[0] = i;
-	      nIdxBase[1] = j;
-	      nIdxBase[2] = k;
-	      break;
+              case 0:
+                nIdxBase[0] = i+2;
+                nIdxBase[1] = j;
+                nIdxBase[2] = k;
+                break;
+              case 1:
+                nIdxBase[0] = i-2;
+                nIdxBase[1] = j;
+                nIdxBase[2] = k;
+                break;
+              case 2:
+                nIdxBase[0] = i;
+                nIdxBase[1] = j+2;
+                nIdxBase[2] = k;
+                break;
+              case 3:
+                nIdxBase[0] = i;
+                nIdxBase[1] = j-2;
+                nIdxBase[2] = k;
+                break;
+              case 4:
+                nIdxBase[0] = i;
+                nIdxBase[1] = j;
+                nIdxBase[2] = k+2;
+                break;
+              case 5:
+                nIdxBase[0] = i;
+                nIdxBase[1] = j;
+                nIdxBase[2] = k-2;
+                break;
+              default:
+                nIdxBase[0] = i;
+                nIdxBase[1] = j;
+                nIdxBase[2] = k;
+                break;
             }
             nIdx = subToIdx(nIdxBase[0], nIdxBase[1], nIdxBase[2]);
             if( (cells[nIdx]->state != eStatePoly)
-		&& (cells[nIdx+1]->state != eStatePoly)
-		&& (cells[nIdx+1]->state != eStateBound)) {
+               && (cells[nIdx+1]->state != eStatePoly)
+               && (cells[nIdx+1]->state != eStateBound)) {
               // this neighbor is not polymer, and has not been swapped, so add it to the swappable list
               notPolyN[numNotPolyN] = nIdx;
               numNotPolyN++;
@@ -417,46 +430,46 @@ void CellModel::setBlockState(const u32 idx, eCellState state) {
 	
   // force border cells to assume boundary state
   if ( i==0 || j==0 || k==0
-       || i>(cubeLength-2) || j>(cubeLength-2) || k>(cubeLength-2) ) {
+      || i>(cubeLength-2) || j>(cubeLength-2) || k>(cubeLength-2) ) {
     state = eStateBound;
   }
   
   switch(state) {
-  case eStatePoly:
-  case eStateBound:
-    for(l=0; l<2; l++) {
-      for(m=0; m<2; m++) {
-	for(n=0; n<2; n++) {
-	  nIdx = subToIdx(i+l, j+m, k+n);
-	  cells[nIdx]->state = state;
-	}
+    case eStatePoly:
+    case eStateBound:
+      for(l=0; l<2; l++) {
+        for(m=0; m<2; m++) {
+          for(n=0; n<2; n++) {
+            nIdx = subToIdx(i+l, j+m, k+n);
+            cells[nIdx]->state = state;
+          }
+        }
       }
-    }
-    break;
-  case eStateDrug:
-    // drug cells: fill diagonals
-    for(diag = 0; diag<4; diag++) {
-      nIdx = subToIdx(i+diags[diag][0], j+diags[diag][1], k+diags[diag][2]);
-      cells[nIdx]->state = eStateDrug;
-    }
-    // opposite diagonals are empty
-    for(diag = 0; diag<4; diag++) {
-      nIdx = subToIdx(i+diagsNot[diag][0], j+diagsNot[diag][1], k+diagsNot[diag][2]);
-      cells[nIdx]->state = eStateVoid;
-    }
-    break;
-  case eStateEx:
-    // excipient cells: fill diagonals
-    for(diag = 0; diag<4; diag++) {
-      u32	nIdx = subToIdx(i+diags[diag][0], j+diags[diag][1], k+diags[diag][2]);
-      cells[nIdx]->state = eStateEx;
-    }
-    // opposite diagonals are empty
-    for(diag = 0; diag<4; diag++) {
-      nIdx = subToIdx(i+diagsNot[diag][0], j+diagsNot[diag][1], k+diagsNot[diag][2]);
-      cells[nIdx]->state = eStateVoid;
-    }
-    break;
+      break;
+    case eStateDrug:
+      // drug cells: fill diagonals
+      for(diag = 0; diag<4; diag++) {
+        nIdx = subToIdx(i+diags[diag][0], j+diags[diag][1], k+diags[diag][2]);
+        cells[nIdx]->state = eStateDrug;
+      }
+      // opposite diagonals are empty
+      for(diag = 0; diag<4; diag++) {
+        nIdx = subToIdx(i+diagsNot[diag][0], j+diagsNot[diag][1], k+diagsNot[diag][2]);
+        cells[nIdx]->state = eStateVoid;
+      }
+      break;
+    case eStateEx:
+      // excipient cells: fill diagonals
+      for(diag = 0; diag<4; diag++) {
+        u32	nIdx = subToIdx(i+diags[diag][0], j+diags[diag][1], k+diags[diag][2]);
+        cells[nIdx]->state = eStateEx;
+      }
+      // opposite diagonals are empty
+      for(diag = 0; diag<4; diag++) {
+        nIdx = subToIdx(i+diagsNot[diag][0], j+diagsNot[diag][1], k+diagsNot[diag][2]);
+        cells[nIdx]->state = eStateVoid;
+      }
+      break;
   }
 }
-  
+

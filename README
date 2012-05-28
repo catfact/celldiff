@@ -18,11 +18,9 @@ celldiff arguments
 -b, --polyshellbalance  : (1.0)  distribution of polymer in the shell, as an "imbalance factor"
 -f, --boundarydiffusion : (0.9)  exponential decay factor for concentrations in boundary cells
 -x, --nographics        : (1)    set >0 to run in non-interactive, text-only mode (suitable for scripting)
--u, --drugdiffrate      : (0.000001) physical rate of drug diffusion (in m/s2 ?)
--k, --exdiffrate        : (0.000001) physical rate of excipient diffusion (in m/s2 ?)
--y, --cellsize          : (0.001) physical size of a cell (in meters ?)
--z, --timestep          : (0.001) elapsed time between iterations
-
+-u, --drugdiffrate      : (0.0000005) physical rate of drug diffusion (in m/s2)
+-k, --exdiffrate        : (0.0000005) physical rate of excipient diffusion (in m/s2)
+-y, --cellsize          : (0.001) physical size of a cell (in meters)
 
 the ratio of released drug mass is printed as newline-separated values to the specified file path.
 

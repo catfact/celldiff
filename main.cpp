@@ -76,8 +76,6 @@ static f64 exdiff = 0.000001;
 static f64 dissScale = 1.0;
 // cell size (in meters)
 static f64 cellsize = 0.001;
-//  time step size (in seconds)
-static f64 timestep = 0.001;
 // ncurses window pointer
 static WINDOW* win;
 
@@ -164,7 +162,6 @@ int main (const int argc, char* const* argv) {
                   pd,    // p drug
                   pp,    // p polymer
                   cellsize,  // cell size
-                  timestep,  // time step
                   drugdiff,   // drug diffusion constant
                   exdiff,          // excipient diffusion constant
                   seed,          // RNG seed,
@@ -246,6 +243,7 @@ int main (const int argc, char* const* argv) {
     const double r = released[1] / model.drugMassTotal;
     print(1, 0, "iteration %d of %d, released %f of %f, ratio %f", step, iterationCount, released[1], model.drugMassTotal, r);
     fprintf(releasedOut, "\n%f\t%f", model.dt * (float)step, r);
+//      fprintf(releasedOut, "\n%f", r);
     
   } // end main loop
   
@@ -334,14 +332,13 @@ int parse_args(const int argc, char* const* argv) {
     {"drugdiffusionrate", required_argument, 0, 'u'},
     {"exdiffusionrate",   required_argument, 0, 'k'},
     {"cellsize",          required_argument, 0, 'y'},
-    {"timestep",          required_argument, 0, 'z'},
     {0, 0, 0, 0}
   };
   
   int opt = 0;
   int opt_idx = 0;
   while (1) {
-    opt = getopt_long(argc, argv, "n:c:p:g:h:r:s:t:d:e:a:o:l:w:b:f:x:u:k:y:z:",
+    opt = getopt_long(argc, argv, "n:c:p:g:h:r:s:t:d:e:a:o:l:w:b:f:x:u:k:y:",
                       long_options, &opt_idx);
     if (opt == -1) { break; }
     
@@ -405,9 +402,6 @@ int parse_args(const int argc, char* const* argv) {
         break;
       case 'y':
         cellsize = atof(optarg);
-        break;
-      case 'z':
-        timestep = atof(optarg);
         break;
       default:
         break;
