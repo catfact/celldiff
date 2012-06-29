@@ -28,8 +28,10 @@ using namespace std;
 //=======  variables
 static f64 noChangeMassThresh = 0.00001;
 static u32 noChangeCountThresh = 100;
-// diameter of computation domain
-static u32 n = 32;
+// diameter of computation domain, in number of cells
+static u32 n; // = 32;
+/// diameter now specified in units of absolute length:
+static f32 diameter = 0.016;
 // maximum simulation time
 static f64 maxtime = 100.0;
 // max iterations count
@@ -135,6 +137,9 @@ int main (const int argc, char* const* argv) {
     // print help message and return
     //  return 0;
   }
+  
+  //// get count of cells from absolute diameter
+  n = (u32)(2.0 *  diameter / cellsize);
   
   frameNum = n >> 1; // show center slice
   
@@ -316,7 +321,8 @@ static void end_graphics(void) {
 int parse_args(const int argc, char* const* argv) {
   
   static struct option long_options[] = {
-    {"cubelength",        required_argument, 0, 'n'}, 
+//    {"cubelength",        required_argument, 0, 'n'}, 
+    {"diameter",        required_argument, 0, 'n'}, 
     {"maxtime",		        required_argument, 0, 'c'},
     {"polymerratio",      required_argument, 0, 'p'},
     {"drugratio",         required_argument, 0, 'g'},
@@ -348,7 +354,8 @@ int parse_args(const int argc, char* const* argv) {
     
     switch(opt) {
       case 'n':
-        n = atoi(optarg);
+        // n = atoi(optarg);
+        diameter = atof(optarg);
         break;
       case 'c':
         maxtime = atof(optarg);

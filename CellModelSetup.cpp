@@ -151,6 +151,11 @@ void CellModel::setup(void) {
   dDrug *= NUM_NEIGHBORS_R;
   dEx *= NUM_NEIGHBORS_R;
   
+  ////// debug hook
+  int dum = 0;
+  dum++;
+  //////
+  
   ////////// DEBUG
   /*  
    // another loop over all cells to verify final cell distribution count
