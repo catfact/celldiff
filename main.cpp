@@ -28,10 +28,14 @@ using namespace std;
 //=======  variables
 static f64 noChangeMassThresh = 0.00001;
 static u32 noChangeCountThresh = 100;
-// length of cube
-static u32 n = 32;
-// current iteration count
-static u32 iterationCount = 0;
+// diameter of computation domain, in number of cells
+static u32 n; // = 32;
+/// diameter now specified in units of absolute length:
+static f32 diameter = 0.016;
+// maximum simulation time
+static f64 maxtime = 100.0;
+// max iterations count
+static u32 iterationCount;
 // current animation frame step
 static u32 frameStep = 0;
 // animation frame period
@@ -40,7 +44,7 @@ static u32 framePeriod = 1;
 static u32 frameNum = 0;
 // concentrations
 static f64 pd=0.1, pp=0.4;
-// cylinder height
+// tablet height
 static f64 h=0.23;
 // RNG seed
 static u32 seed = 47;
@@ -54,8 +58,10 @@ static u32 statePeriod = 0;
 static u32 stateStep = 0;
 // ascii output toggle
 static u32 asciiout = 1;
-// dissolution probability scale (denominator == dissprob * numneighbors)
-static f64 dissprob = 1;
+// dissolution probability scale (drug)
+static f64 dissprobdrug = 1.0;
+// dissolution probability scale (excipient)
+static f64 dissprobex = 1.0;
 // dissolution prob / polymer correlation factor
 static f64 disspolyscale = 0.0;
 // width of polymer shell
@@ -74,8 +80,6 @@ static f64 exdiff = 0.000001;
 static f64 dissScale = 1.0;
 // cell size (in meters)
 static f64 cellsize = 0.001;
-//  time step size (in seconds)
-static f64 timestep = 0.001;
 // ncurses window pointer
 static WINDOW* win;
 
@@ -125,7 +129,6 @@ int main (const int argc, char* const* argv) {
   // set default variables
   releasedPath = "diff_release_" + timetag.str() + ".txt";
   statePath = "diff_state_" + timetag.str() + ".txt";
-  iterationCount = 100;
 	
   // return something if --help passed?
   int parsed = parse_args(argc, argv);
@@ -134,6 +137,9 @@ int main (const int argc, char* const* argv) {
     // print help message and return
     //  return 0;
   }
+  
+  //// get count of cells from absolute diameter
+  n = (u32)(2.0 *  diameter / cellsize);
   
   frameNum = n >> 1; // show center slice
   
@@ -162,12 +168,11 @@ int main (const int argc, char* const* argv) {
                   pd,    // p drug
                   pp,    // p polymer
                   cellsize,  // cell size
-                  timestep,  // time step
                   drugdiff,   // drug diffusion constant
                   exdiff,          // excipient diffusion constant
                   seed,          // RNG seed,
-                  dissprob,    // dissolution probability scale,
-                  disspolyscale, // dissolution probability -> polymer correlation factor,
+                  dissprobdrug,    // dissolution probability scale (drug)
+                  dissprobex,    // dissolution probability scale (excipient)
                   polyShellWidth,       // shell width
                   polyShellBalance,  // shell balance
                   boundDiff,       // boundary diffusino factor (exponential)
@@ -177,6 +182,9 @@ int main (const int argc, char* const* argv) {
   print(0, 0, "cube width %i, pd: %f, pp: %f", (int)n, pd, pp);
   if(nographics) {} else { print(1, 0, "initializing..."); }
   model.setup();
+  
+  iterationCount = (u32)(maxtime / model.dt);
+  
   
   print(2, 0, "cell memory is %d bytes", model.numCells * sizeof(Cell));
   if(nographics) {
@@ -244,6 +252,7 @@ int main (const int argc, char* const* argv) {
     const double r = released[1] / model.drugMassTotal;
     print(1, 0, "iteration %d of %d, released %f of %f, ratio %f", step, iterationCount, released[1], model.drugMassTotal, r);
     fprintf(releasedOut, "\n%f\t%f", model.dt * (float)step, r);
+//      fprintf(releasedOut, "\n%f", r);
     
   } // end main loop
   
@@ -312,8 +321,8 @@ static void end_graphics(void) {
 int parse_args(const int argc, char* const* argv) {
   
   static struct option long_options[] = {
-    {"diameter",        required_argument, 0, 'n'}, 
-    {"maxiterations",		  required_argument, 0, 'c'},
+    {"diameter",          required_argument, 0, 'n'}, 
+    {"maxtime",		  required_argument, 0, 'c'},
     {"polymerratio",      required_argument, 0, 'p'},
     {"drugratio",         required_argument, 0, 'g'},
     {"tabletheight",	  required_argument, 0, 'h'},
@@ -323,33 +332,32 @@ int parse_args(const int argc, char* const* argv) {
     {"nochangecount",		  required_argument, 0, 'd'},
     {"seed",              required_argument, 0, 'e'},
     {"asciiperiod",       required_argument, 0, 'a'},
-    {"dissdenom",         required_argument, 0, 'o'},
-    {"disspolyscale",		  required_argument, 0, 'i'},
+    {"dissprobdrug",      required_argument, 0, 'o'},
+    {"dissprobex",        required_argument, 0, 'l'},
     {"polyshellwidth",	  required_argument, 0, 'w'},
     {"polyshellbalance",  required_argument, 0, 'b'},
     {"boundarydiffusion", required_argument, 0, 'f'},
     {"nographics",        required_argument, 0, 'x'},
     {"drugdiffusionrate", required_argument, 0, 'u'},
     {"exdiffusionrate",   required_argument, 0, 'k'},
-    {"dissolutionrate",   required_argument, 0, 'l'},
     {"cellsize",          required_argument, 0, 'y'},
-    {"timestep",          required_argument, 0, 'z'},
     {0, 0, 0, 0}
   };
   
   int opt = 0;
   int opt_idx = 0;
   while (1) {
-    opt = getopt_long(argc, argv, "n:c:p:g:h:r:s:t:d:e:a:o:i:w:b:f:x:u:k:l:y:z:",
+    opt = getopt_long(argc, argv, "n:c:p:g:h:r:s:t:d:e:a:o:l:w:b:f:x:u:k:y:",
                       long_options, &opt_idx);
     if (opt == -1) { break; }
     
     switch(opt) {
       case 'n':
-        n = atoi(optarg);
+        // n = atoi(optarg);
+        diameter = atof(optarg);
         break;
       case 'c':
-        iterationCount = atoi(optarg);
+        maxtime = atof(optarg);
         break;
       case 'p' :
         pp = atof(optarg);
@@ -379,10 +387,10 @@ int parse_args(const int argc, char* const* argv) {
         framePeriod = atoi(optarg);
         break;
       case 'o':
-        dissprob = atof(optarg);
+        dissprobdrug = atof(optarg);
         break;
-      case 'i':
-        disspolyscale = atof(optarg);
+      case 'l':
+        dissprobex = atof(optarg);
         break;
       case 'w':
         polyShellWidth = atoi(optarg);
@@ -402,14 +410,8 @@ int parse_args(const int argc, char* const* argv) {
       case 'k':
         exdiff = atof(optarg);
         break;
-      case 'l':
-        dissScale = atof(optarg);
-        break;
       case 'y':
         cellsize = atof(optarg);
-        break;
-      case 'z':
-        timestep = atof(optarg);
         break;
       default:
         break;

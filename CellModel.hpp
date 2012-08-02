@@ -33,6 +33,7 @@
 #define NUM_NEIGHBORS 26
 #else
 #define NUM_NEIGHBORS 6
+#define NUM_NEIGHBORS_R 0.16666666666666666
 #endif 
 
 //======= types
@@ -86,12 +87,11 @@ public:
             f64 pDrug,
             f64 pPoly,
             f64 cellW,
-            f64 dT,
             f64 ddrug=7e-6,
             f64 dex=7e-6,
             u32 seed=47u,
-            f64 dissprob=1.0,
-            f64 disspoly=0.0,
+            f64 dissprobdrug=1.0,
+            f64 dissprobex=1.0,
             u32 shellWidth=1,
             f64 polyshellbalance = 1.0,
             f64 bounddiffrate = 0.02,
@@ -157,12 +157,10 @@ public: // FIXME: many of these could be privatized
   f64 drugMass;
   // trapped drug mass (never changes)
   f64 trappedDrugMass;
-  // a common intermediate multiplier
-  f64 dt_l2;
-	// base dissolution probability
-	f64 dissprob;
-	// dissolution probability / NPN weighting
-	f64 disspolyscale;
+	// dissolution probability (drug)
+	f64 dissProbDrug;
+	// dissolution probability (excipient)
+	f64 dissProbEx;
   // boundary diffusion rate
   f64 boundDiff;
   // shell width in cells
