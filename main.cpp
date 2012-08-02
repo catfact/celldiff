@@ -139,7 +139,9 @@ int main (const int argc, char* const* argv) {
   }
   
   //// get count of cells from absolute diameter
-  n = (u32)(2.0 *  diameter / cellsize);
+  //n = (u32)(2.0 *  diameter / cellsize);
+  // first round up/down, then cast, then multiply
+  n = 2 * ((u32)((diameter / cellsize) + 0.5));
   
   frameNum = n >> 1; // show center slice
   
