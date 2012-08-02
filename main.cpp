@@ -80,6 +80,8 @@ static f64 exdiff = 0.000001;
 static f64 dissScale = 1.0;
 // cell size (in meters)
 static f64 cellsize = 0.001;
+// compression flag
+static u32 compressFlag = 1;
 // ncurses window pointer
 static WINDOW* win;
 
@@ -89,7 +91,7 @@ int main(const int argc, char* const* argv);
 static int parse_args(const int argc, char* const* argv);
 static void start_graphics(void);
 static void end_graphics(void);
-static void printFrame(CellModel* model, u32 frame);
+static void print_frame(CellModel* model, u32 frame);
 static void print(const int x, const int y, const char* fmt, ...);
 
 //============== function definitions
@@ -137,12 +139,18 @@ int main (const int argc, char* const* argv) {
     // print help message and return
     //  return 0;
   }
+
+
   
   //// get count of cells from absolute diameter
   //n = (u32)(2.0 *  diameter / cellsize);
   // first round up/down, then cast, then multiply
-  n = 2 * ((u32)((diameter / cellsize) + 0.5));
-  
+
+  n = ((u32)((diameter / cellsize) + 0.5));
+  if(compressFlag) {
+    n *= 2;
+  }    
+
   frameNum = n >> 1; // show center slice
   
   // finish setting up variables
@@ -178,7 +186,8 @@ int main (const int argc, char* const* argv) {
                   polyShellWidth,       // shell width
                   polyShellBalance,  // shell balance
                   boundDiff,       // boundary diffusino factor (exponential)
-                  dissScale          // dissolution time scaling 
+                  dissScale,          // dissolution time scaling 
+		  (u8)compressFlag     // compression flag
                   );
 	
   print(0, 0, "cube width %i, pd: %f, pp: %f", (int)n, pd, pp);
@@ -216,7 +225,7 @@ int main (const int argc, char* const* argv) {
     }
     
     if( frameStep == framePeriod ) {
-      printFrame(&model, frameNum);
+      print_frame(&model, frameNum);
       frameStep = 0;
     }
   
@@ -258,7 +267,7 @@ int main (const int argc, char* const* argv) {
     
   } // end main loop
   
-  printFrame(&model, frameNum); 
+  print_frame(&model, frameNum); 
   
   switch(halt) {
     case HALT_MAX_ITERATIONS:
@@ -331,7 +340,8 @@ int parse_args(const int argc, char* const* argv) {
     {"releasedfile",		  required_argument, 0, 'r'},
     {"statefile",         required_argument, 0, 's'},
     {"stateperiod",       required_argument, 0, 't'},
-    {"nochangecount",		  required_argument, 0, 'd'},
+    //    {"nochangecount",		  required_argument, 0, 'd'},
+    {"compress",          required_argument, 0, 'd'},
     {"seed",              required_argument, 0, 'e'},
     {"asciiperiod",       required_argument, 0, 'a'},
     {"dissprobdrug",      required_argument, 0, 'o'},
@@ -380,7 +390,8 @@ int parse_args(const int argc, char* const* argv) {
         statePeriod = atoi(optarg);
         break;
       case 'd':
-        noChangeCountThresh = atoi(optarg);
+	//        noChangeCountThresh = atoi(optarg);
+	compressFlag = atoi(optarg);
         break;
       case 'e':
         seed = atoi(optarg);
@@ -422,7 +433,7 @@ int parse_args(const int argc, char* const* argv) {
 }
 
 // draw an animation frame
-void printFrame(CellModel* model, u32 slice) {
+void print_frame(CellModel* model, u32 slice) {
   u32 i = slice;
   u32 idx;
   

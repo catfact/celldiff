@@ -8,8 +8,8 @@ celldiff arguments
 -r, --releasedfile      :        filname for exporting release curve. defaults to a timestamped name
 -s, --statefile         :        filename for exporting full state data. defaults to a timestamped name
 -t, --stateperiod       : (0)    how often to export full state data; 0 == never 
-# -d, --nochangecount     : (100)  how many consecutive unchanging iterations before halting
--e, --seed              : (47)   random number seed (unsigned integer)
+
+-e, --rngseed              : (47)   random number seed (unsigned integer)
 -a, --asciiperiod       : (1)    frame period in iterations for drawing ascii animation
 
 -o, --drugdissprob      : (1.0)  dissolution probability scale for drug
@@ -22,6 +22,8 @@ celldiff arguments
 -u, --drugdiffrate      : (0.000001) physical rate of drug diffusion (in m/s2)
 -k, --exdiffrate        : (0.000001) physical rate of excipient diffusion (in m/s2)
 -y, --cellsize          : (0.001) physical size of a cell (in meters)
+
+-d, --compress          : (1) compression flag 
 
 the ratio of released drug mass is printed as newline-separated values to the specified file path.
 

@@ -95,20 +95,22 @@ public:
             u32 shellWidth=1,
             f64 polyshellbalance = 1.0,
             f64 bounddiffrate = 0.02,
-            f64 dissratescale=1.0
+            f64 dissratescale=1.0,
+	    u8 compress=1
             );
   ~CellModel(void);
   // set initial values, tablet shape, etc
   void setup(void);
-  ///// more setup funxtions...
-  // initial distribution of particlrd
-  void distribute(void);
-  // compression step
-  void compress(void);
-  
   // advance time in the model by one step
   f64 iterate(void);
 private:
+  ///// more setup funxtions...
+  // initial distribution of particles
+  void distribute(void);
+  // compression step
+  void compress(void);
+  // find cells that need processing
+  void findCellsToProcess(void);
   // paopulate neighbor index array for a given cell
   void findNeighbors(Cell* cell);
   // decide whether to dissolve given cell; return new state
@@ -123,8 +125,10 @@ private:
   // index / coordinates conversion
   u32 subToIdx(const u32 x, const u32 y, const u32 z);
   void idxToSub(u32 idx, u32* pX, u32* pY, u32* pZ);
-  // utility to set state of a 2x2x2 block of cells
+  // set state of a 2x2x2 block of cells
   void setBlockState(const u32 idx, eCellState state);
+  // set state of a single cell
+  void setCellState(const u32 idx, eCellState state);
   // random number generation
   f64 getRand(void);
 	
@@ -169,6 +173,8 @@ public: // FIXME: many of these could be privatized
   f64 pShellBalance;
   // dissolution rate scaling factor for all cells
   f64 dissratescale;
+  // compressino flag
+  u8 compressFlag;
   // diffusion weights given number of polymer neighbors
   static const f64 diffNMul[7];
   // dissolution steps given number of polymer neighbors
