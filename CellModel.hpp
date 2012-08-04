@@ -95,7 +95,8 @@ public:
             u32 shellWidth=1,
             f64 polyshellbalance = 1.0,
             f64 bounddiffrate = 0.02,
-            f64 dissratescale=1.0
+            f64 dissratescale=1.0,
+	    u8 compressflag=1
             );
   ~CellModel(void);
   // set initial values, tablet shape, etc
@@ -127,7 +128,8 @@ private:
   void setBlockState(const u32 idx, eCellState state);
   // random number generation
   f64 getRand(void);
-	
+  // set state f a single cell
+  void setCellState(const u32 idx, eCellState state);
 public: // FIXME: many of these could be privatized
 	// cell type distribution
   //  u32 nDrug;
@@ -180,7 +182,8 @@ public: // FIXME: many of these could be privatized
   // cells-to-process (drug, excip, water, diffusing, or immediate boundary) 
   u32* cellsToProcess;
   u32 numCellsToProcess;
-	
+  // compression flag
+  u8 compressFlag;
   //====== random number stuff
 #if USE_BOOST
   // randomization algorithm

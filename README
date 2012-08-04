@@ -8,13 +8,11 @@ celldiff arguments
 -r, --releasedfile      :        filname for exporting release curve. defaults to a timestamped name
 -s, --statefile         :        filename for exporting full state data. defaults to a timestamped name
 -t, --stateperiod       : (0)    how often to export full state data; 0 == never 
-# -d, --nochangecount     : (100)  how many consecutive unchanging iterations before halting
+-d, --compress          : (1)    perform compression step
 -e, --seed              : (47)   random number seed (unsigned integer)
 -a, --asciiperiod       : (1)    frame period in iterations for drawing ascii animation
-
 -o, --drugdissprob      : (1.0)  dissolution probability scale for drug
 -l, --exdissprob        : (1.0)  dissolution probability scale for excipient
-
 -w, --polyshellwidth    : (1)    width of the polymer shell (calculated in 8-cell, 2x2x2 blocks)
 -b, --polyshellbalance  : (1.0)  distribution of polymer in the shell, as an "imbalance factor"
 -f, --boundarydiffusion : (0.9)  exponential decay factor for concentrations in boundary cells

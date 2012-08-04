@@ -99,7 +99,8 @@ CellModel::CellModel(
                      u32 shellwidth,
                      f64 polyshellbalance,
                      f64 bounddiffrate,
-                     f64 dissScale
+                     f64 dissScale,
+		     u8 compressflag
                      ) :
 #if USE_BOOST
 rngEngine(), rngDist(0.f, 1.f),
@@ -120,9 +121,17 @@ pShellBalance(polyshellbalance),
 boundDiff(bounddiffrate),
 dissratescale(dissScale),
 dissProbDrug(dprobdrug),
-dissProbEx(dprobex)
+dissProbEx(dprobex),
+compressFlag(compressflag)
 {
-  cellLength *= 0.5;
+
+  
+
+  if(this->compressFlag) {
+    cellLength *= 0.5;
+    cubeLength *= 2;
+  }
+ 
   
   cubeLength2 = cubeLength * cubeLength;
   numCells = cubeLength * cubeLength * cubeLength;
