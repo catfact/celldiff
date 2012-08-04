@@ -27,9 +27,9 @@ using namespace std;
 
 //=======  variables
 static f64 noChangeMassThresh = 0.00001;
-static u32 noChangeCountThresh = 100;
+static u32 noChangeCountThresh = 10;
 // diameter of computation domain, in number of cells
-static u32 n; // = 32;
+static u32 n = 32;
 /// diameter now specified in units of absolute length:
 static f32 diameter = 0.016;
 // maximum simulation time
@@ -81,7 +81,8 @@ static f64 dissScale = 1.0;
 // cell size (in meters)
 static f64 cellsize = 0.001;
 // compression flag
-static u32 compressFlag = 1;
+static u8 compress = 1;
+
 // ncurses window pointer
 static WINDOW* win;
 
@@ -143,14 +144,12 @@ int main (const int argc, char* const* argv) {
 
   
   //// get count of cells from absolute diameter
-  //n = (u32)(2.0 *  diameter / cellsize);
-  // first round up/down, then cast, then multiply
-
-  n = ((u32)((diameter / cellsize) + 0.5));
-  if(compressFlag) {
-    n *= 2;
-  }    
-
+  // first round up/down, then cast, then multiply  
+  n = ( (u32) ( (diameter / cellsize) + 0.5 ) );
+  //  if (compress) {
+  //  n *= 2
+  // }
+  
   frameNum = n >> 1; // show center slice
   
   // finish setting up variables
@@ -164,7 +163,7 @@ int main (const int argc, char* const* argv) {
   FILE* stateOut;
   if (statePeriod > 0) {
     stateOut = fopen(statePath.c_str(), "w");
-    if (stateOut == NULL) {
+    if (stateOut == NULL) { 
       printf("error opening state output file, exiting!\n");
       return 1;
     }
@@ -186,8 +185,8 @@ int main (const int argc, char* const* argv) {
                   polyShellWidth,       // shell width
                   polyShellBalance,  // shell balance
                   boundDiff,       // boundary diffusino factor (exponential)
-                  dissScale,          // dissolution time scaling 
-		  (u8)compressFlag     // compression flag
+                  dissScale,          // dissolution time scaling,
+		  compress  // compression flag
                   );
 	
   print(0, 0, "cube width %i, pd: %f, pp: %f", (int)n, pd, pp);
@@ -341,7 +340,7 @@ int parse_args(const int argc, char* const* argv) {
     {"statefile",         required_argument, 0, 's'},
     {"stateperiod",       required_argument, 0, 't'},
     //    {"nochangecount",		  required_argument, 0, 'd'},
-    {"compress",          required_argument, 0, 'd'},
+    {"compress",		  required_argument, 0, 'd'},
     {"seed",              required_argument, 0, 'e'},
     {"asciiperiod",       required_argument, 0, 'a'},
     {"dissprobdrug",      required_argument, 0, 'o'},
@@ -391,8 +390,8 @@ int parse_args(const int argc, char* const* argv) {
         break;
       case 'd':
 	//        noChangeCountThresh = atoi(optarg);
-	compressFlag = atoi(optarg);
-        break;
+	compress = atoi(optarg);
+	break;
       case 'e':
         seed = atoi(optarg);
         break;

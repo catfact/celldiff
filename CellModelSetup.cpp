@@ -57,6 +57,90 @@ void CellModel::setup(void) {
   if(this->compressFlag) {
     this->compress();
   }
+	
+  // offset coordinates to get diagonals in 2x2x2
+  const u8 diags[4][3]	= { {0, 0, 0}, {0, 1, 1}, {1, 0, 1}, {1, 1, 0} };
+  // complementary diagonals
+  const u8 diagsNot[4][3]	= { {1, 1, 1}, {1, 0, 0}, {0, 1, 0}, {0, 0, 1} };
+  u8 diag = 0;
+	
+  /// find cells to process
+  numCellsToProcess = 0;
+  u8 proc = 0;
+  eCellState tmpState;
+  
+  drugMassTotal = 0.0;
+  
+  for(u32 i=0; i<numCells; i++) {
+    findNeighbors(cells[i]);
+    proc=0;
+    switch (cells[i]->state) {
+      case eStatePoly:
+        proc = 0;
+        break;
+      case eStateDrug:
+        proc = 1;
+        drugMassTotal += 1.0;
+        break;
+      case eStateEx:
+        proc = 1;
+        break;
+      case eStateVoid:
+        proc = 1;
+        // printf("{ %d, %d } ; ", (int)numCellsToProcess, (int)cells[i]->idx);
+        break;
+      case eStateBound:
+        // want to process boundary cells only if they adjoin a non-boundary, non-poly
+        for(u8 ni = 0; ni<NUM_NEIGHBORS; ni++) {
+          tmpState = cells[cells[i]->neighborIdx[ni]]->state;
+          proc |= ((tmpState == eStateDrug) || (tmpState == eStateEx) || (tmpState == eStateVoid));
+        }
+        ////// DEBUG:
+        // if(proc) { cellsAdjoining++; }
+        //  dum++;
+        /////////
+        break;
+      default:
+        proc = 0;
+        break;
+    }
+    
+    if(proc) { 	
+      // find neighbors-with-polymer count
+      u8 np = 0;
+      for(u8 nb=0; nb<NUM_NEIGHBORS; nb++) {
+        if ( cells[cells[i]->neighborIdx[nb]]->state == eStatePoly ) {
+          np++;
+        }
+      }
+			
+      // don't need to process if cell is trapped by polymer
+      if (np > 5) {
+        if(cells[i]->state == eStateDrug) {
+          trappedDrugMass += 1.0;
+        }
+        continue;
+      }
+			
+      cellsToProcess[numCellsToProcess] = cells[i]->idx;
+      numCellsToProcess++;
+			
+      cells[i]->diffMul = diffNMul[np];
+      cells[i]->dissSteps = (u32)((f64)dissNSteps[np] * dissratescale);
+      cells[i]->dissInc = 1.0 / (f64)(cells[i]->dissSteps);
+			
+      // set dissolution probability depending on cell type
+      if(cells[i]->state == eStateDrug) {
+        cells[i]->dissProb = dissProbDrug;
+      }
+      if(cells[i]->state == eStateEx) {
+        cells[i]->dissProb = dissProbEx;
+      }
+      if(cells[i]->state == eStateVoid) {
+        cells[i]->dissProb = 1.0;
+      }
+    }
+  }
 
   // find cels tht need processing and intialize their state
   this->findCellsToProcess();
@@ -125,50 +209,98 @@ void CellModel::distribute(void) {
   vector<u32> drugIdx;    
   vector<u32> exIdx;   
   
-  // cylinder dimensions
-  cX = cubeLength >> 1;
-  cY = cX;
-  cZ = cX;
-  cubeR2 = (cX-1) * (cX-1);
-  shellR2 = (cX-1-(wShell*2)) * (cX-1-(wShell*2));
+  if (this->compressFlag) {
+
+    // cylinder dimensions
+    cX = cubeLength >> 1;
+    cY = cX;
+    cZ = cX;
+    cubeR2 = (cX-1) * (cX-1);
+    shellR2 = (cX-1-(wShell*2)) * (cX-1-(wShell*2));
   
-  // number of cells in cylinder height
-  boundH = cylinderHeight * cubeLength;
-  loBoundH = cZ - (boundH >> 1);
-  hiBoundH = cZ + (boundH >> 1);
-  loShellH = loBoundH + (wShell*2);
-  hiShellH = hiBoundH - (wShell*2);
+    // number of cells in cylinder height
+    boundH = cylinderHeight * cubeLength;
+    loBoundH = cZ - (boundH >> 1);
+    hiBoundH = cZ + (boundH >> 1);
+    loShellH = loBoundH + (wShell*2);
+    hiShellH = hiBoundH - (wShell*2);
   
-  // divide the space: interior, exterior, shell
-  for(u32 i=0; i<cubeLength; i += 2) {
-    for(u32 j=0; j<cubeLength; j += 2) {
-      for(u32 k=0; k<cubeLength; k += 2) {
-        idx = subToIdx(i, j, k);
-        dcX = i-cX+1;
-        dcY = j-cY+1;
-        r2 = (dcX * dcX) + (dcY * dcY);
-        if ((i < 1) 
-            || (j < 1) 
-            || (k < 1)
-            || (i > (cubeLength-3))
-            || (j > (cubeLength-3))
-            || (k < loBoundH)
-            || (k > hiBoundH)
-            || (r2 >= cubeR2) ) {
-          // exterior cells
-          this->setBlockState(idx, eStateBound);
-        } // end outside-cylinder
-        else { 
-          if((r2 > shellR2) || (k < loShellH) || (k > hiShellH)) {
-            shellIdx.push_back(idx);
-          } else {
-            tabletIdx.push_back(idx);
-          }
-        } // end outside-cylinder test
-      } // k
-    } // j
-  } // i
+    // divide the space: interior, exterior, shell
+    for(u32 i=0; i<cubeLength; i += 2) {
+      for(u32 j=0; j<cubeLength; j += 2) {
+	for(u32 k=0; k<cubeLength; k += 2) {
+	  idx = subToIdx(i, j, k);
+	  dcX = i-cX+1;
+	  dcY = j-cY+1;
+	  r2 = (dcX * dcX) + (dcY * dcY);
+	  if ((i < 1) 
+	      || (j < 1) 
+	      || (k < 1)
+	      || (i > (cubeLength-3))
+	      || (j > (cubeLength-3))
+	      || (k < loBoundH)
+	      || (k > hiBoundH)
+	      || (r2 >= cubeR2) ) {
+	    // exterior cells
+	    this->setBlockState(idx, eStateBound);
+	  } // end outside-cylinder
+	  else { 
+	    if((r2 > shellR2) || (k < loShellH) || (k > hiShellH)) {
+	      shellIdx.push_back(idx);
+	    } else {
+	      tabletIdx.push_back(idx);
+	    }
+	  } // end outside-cylinder test
+	} // k
+      } // j
+    } // i
   
+  } else { // no compression
+    // cylinder dimensions
+    cX = cubeLength >> 1;
+    cY = cX;
+    cZ = cX;
+    cubeR2 = (cX-1) * (cX-1);
+    shellR2 = (cX-1-(wShell)) * (cX-1-(wShell));
+  
+    // number of cells in cylinder height
+    boundH = cylinderHeight * cubeLength;
+    loBoundH = cZ - (boundH >> 1);
+    hiBoundH = cZ + (boundH >> 1);
+    loShellH = loBoundH + (wShell);
+    hiShellH = hiBoundH - (wShell);
+  
+    // divide the space: interior, exterior, shell
+    for(u32 i=0; i<cubeLength; i ++) {
+      for(u32 j=0; j<cubeLength; j ++) {
+	for(u32 k=0; k<cubeLength; k ++) {
+	  idx = subToIdx(i, j, k);
+	  dcX = i-cX+1;
+	  dcY = j-cY+1;
+	  r2 = (dcX * dcX) + (dcY * dcY);
+	  if ((i < 1) 
+	      || (j < 1) 
+	      || (k < 1)
+	      || (i > (cubeLength-2))
+	      || (j > (cubeLength-2))
+	      || (k < loBoundH)
+	      || (k > hiBoundH)
+	      || (r2 >= cubeR2) ) {
+	    // exterior cells
+	    this->setCellState(idx, eStateBound);
+	  } // end outside-cylinder
+	  else { 
+	    if((r2 > shellR2) || (k < loShellH) || (k > hiShellH)) {
+	      shellIdx.push_back(idx);
+	    } else {
+	      tabletIdx.push_back(idx);
+	    }
+	  } // end outside-cylinder test
+	} // k
+      } // j
+    } // i
+  }
+
   // shuffle the shell and tablet idx's 
   random_shuffle(shellIdx.begin(), shellIdx.end());
   random_shuffle(tabletIdx.begin(), tabletIdx.end());
@@ -404,100 +536,17 @@ void CellModel::setBlockState(const u32 idx, eCellState state) {
   }
 }
 
+
 // set state of a single cell
 void CellModel::setCellState(const u32 idx, eCellState state) {
- 
- u32 i, j, k;
-  u8 l, m, n;
+  u32 i, j, k;
   idxToSub(idx, &i, &j, &k);
- 
+  
+  // force border cells to assume boundary state
   if ( i==0 || j==0 || k==0
-       || i>(cubeLength-2) || j>(cubeLength-2) || k>(cubeLength-2) ) {
+      || i>(cubeLength-2) || j>(cubeLength-2) || k>(cubeLength-2) ) {
     state = eStateBound;
   }
 
-  cells[idx]->state = state; 
+  cells[idx]->state = state;
 }
-
-
-  // find cels tht need processing and intialize their state
-
-void CellModel::findCellsToProcess(void) {
-  u32 numCellsToProcess = 0;
-  u8 proc = 0;
-  eCellState tmpState;
-  
-  drugMassTotal = 0.0;
-  
-  for(u32 i=0; i<numCells; i++) {
-    findNeighbors(cells[i]);
-    proc=0;
-    switch (cells[i]->state) {
-      case eStatePoly:
-        proc = 0;
-        break;
-      case eStateDrug:
-        proc = 1;
-        drugMassTotal += 1.0;
-        break;
-      case eStateEx:
-        proc = 1;
-        break;
-      case eStateVoid:
-        proc = 1;
-        // printf("{ %d, %d } ; ", (int)numCellsToProcess, (int)cells[i]->idx);
-        break;
-      case eStateBound:
-        // want to process boundary cells only if they adjoin a non-boundary, non-poly
-        for(u8 ni = 0; ni<NUM_NEIGHBORS; ni++) {
-          tmpState = cells[cells[i]->neighborIdx[ni]]->state;
-          proc |= ((tmpState == eStateDrug) || (tmpState == eStateEx) || (tmpState == eStateVoid));
-        }
-        ////// DEBUG:
-        // if(proc) { cellsAdjoining++; }
-        //  dum++;
-        /////////
-        break;
-      default:
-        proc = 0;
-        break;
-    }
-    
-    if(proc) { 	
-      // find neighbors-with-polymer count
-      u8 np = 0;
-      for(u8 nb=0; nb<NUM_NEIGHBORS; nb++) {
-        if ( cells[cells[i]->neighborIdx[nb]]->state == eStatePoly ) {
-          np++;
-        }
-      }
-			
-      // don't need to process if cell is trapped by polymer
-      if (np > 5) {
-        if(cells[i]->state == eStateDrug) {
-          trappedDrugMass += 1.0;
-        }
-        continue;
-      }
-			
-      cellsToProcess[numCellsToProcess] = cells[i]->idx;
-      numCellsToProcess++;
-			
-      cells[i]->diffMul = diffNMul[np];
-      cells[i]->dissSteps = (u32)((f64)dissNSteps[np] * dissratescale);
-      cells[i]->dissInc = 1.0 / (f64)(cells[i]->dissSteps);
-			
-      // set dissolution probability depending on cell type
-      if(cells[i]->state == eStateDrug) {
-        cells[i]->dissProb = dissProbDrug;
-      }
-      if(cells[i]->state == eStateEx) {
-        cells[i]->dissProb = dissProbEx;
-      }
-      if(cells[i]->state == eStateVoid) {
-        cells[i]->dissProb = 1.0;
-      }
-    }
-  }
-}
-	
