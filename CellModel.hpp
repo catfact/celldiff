@@ -131,9 +131,7 @@ private:
   void setCellState(const u32 idx, eCellState state);
   // random number generation
   f64 getRand(void);
-  // set state f a single cell
-  void setCellState(const u32 idx, eCellState state);
-public: // FIXME: many of these could be privatized
+  public: // FIXME: many of these could be privatized
 	// cell type distribution
   //  u32 nDrug;
   // u32 nEx;
@@ -174,9 +172,7 @@ public: // FIXME: many of these could be privatized
   f64 pShellBalance;
   // dissolution rate scaling factor for all cells
   f64 dissratescale;
-  // compressino flag
-  u8 compressFlag;
-  // diffusion weights given number of polymer neighbors
+    // diffusion weights given number of polymer neighbors
   static const f64 diffNMul[7];
   // dissolution steps given number of polymer neighbors
   static const f64 dissNSteps[7];

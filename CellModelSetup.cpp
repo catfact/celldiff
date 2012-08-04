@@ -64,84 +64,6 @@ void CellModel::setup(void) {
   const u8 diagsNot[4][3]	= { {1, 1, 1}, {1, 0, 0}, {0, 1, 0}, {0, 0, 1} };
   u8 diag = 0;
 	
-  /// find cells to process
-  numCellsToProcess = 0;
-  u8 proc = 0;
-  eCellState tmpState;
-  
-  drugMassTotal = 0.0;
-  
-  for(u32 i=0; i<numCells; i++) {
-    findNeighbors(cells[i]);
-    proc=0;
-    switch (cells[i]->state) {
-      case eStatePoly:
-        proc = 0;
-        break;
-      case eStateDrug:
-        proc = 1;
-        drugMassTotal += 1.0;
-        break;
-      case eStateEx:
-        proc = 1;
-        break;
-      case eStateVoid:
-        proc = 1;
-        // printf("{ %d, %d } ; ", (int)numCellsToProcess, (int)cells[i]->idx);
-        break;
-      case eStateBound:
-        // want to process boundary cells only if they adjoin a non-boundary, non-poly
-        for(u8 ni = 0; ni<NUM_NEIGHBORS; ni++) {
-          tmpState = cells[cells[i]->neighborIdx[ni]]->state;
-          proc |= ((tmpState == eStateDrug) || (tmpState == eStateEx) || (tmpState == eStateVoid));
-        }
-        ////// DEBUG:
-        // if(proc) { cellsAdjoining++; }
-        //  dum++;
-        /////////
-        break;
-      default:
-        proc = 0;
-        break;
-    }
-    
-    if(proc) { 	
-      // find neighbors-with-polymer count
-      u8 np = 0;
-      for(u8 nb=0; nb<NUM_NEIGHBORS; nb++) {
-        if ( cells[cells[i]->neighborIdx[nb]]->state == eStatePoly ) {
-          np++;
-        }
-      }
-			
-      // don't need to process if cell is trapped by polymer
-      if (np > 5) {
-        if(cells[i]->state == eStateDrug) {
-          trappedDrugMass += 1.0;
-        }
-        continue;
-      }
-			
-      cellsToProcess[numCellsToProcess] = cells[i]->idx;
-      numCellsToProcess++;
-			
-      cells[i]->diffMul = diffNMul[np];
-      cells[i]->dissSteps = (u32)((f64)dissNSteps[np] * dissratescale);
-      cells[i]->dissInc = 1.0 / (f64)(cells[i]->dissSteps);
-			
-      // set dissolution probability depending on cell type
-      if(cells[i]->state == eStateDrug) {
-        cells[i]->dissProb = dissProbDrug;
-      }
-      if(cells[i]->state == eStateEx) {
-        cells[i]->dissProb = dissProbEx;
-      }
-      if(cells[i]->state == eStateVoid) {
-        cells[i]->dissProb = 1.0;
-      }
-    }
-  }
-
   // find cels tht need processing and intialize their state
   this->findCellsToProcess();
 	
@@ -549,4 +471,84 @@ void CellModel::setCellState(const u32 idx, eCellState state) {
   }
 
   cells[idx]->state = state;
+}
+
+void CellModel::findCellsToProcess(void) {
+  /// find cells to process
+  numCellsToProcess = 0;
+  u8 proc = 0;
+  eCellState tmpState;
+  
+  drugMassTotal = 0.0;
+  
+  for(u32 i=0; i<numCells; i++) {
+    findNeighbors(cells[i]);
+    proc=0;
+    switch (cells[i]->state) {
+      case eStatePoly:
+        proc = 0;
+        break;
+      case eStateDrug:
+        proc = 1;
+        drugMassTotal += 1.0;
+        break;
+      case eStateEx:
+        proc = 1;
+        break;
+      case eStateVoid:
+        proc = 1;
+        // printf("{ %d, %d } ; ", (int)numCellsToProcess, (int)cells[i]->idx);
+        break;
+      case eStateBound:
+        // want to process boundary cells only if they adjoin a non-boundary, non-poly
+        for(u8 ni = 0; ni<NUM_NEIGHBORS; ni++) {
+          tmpState = cells[cells[i]->neighborIdx[ni]]->state;
+          proc |= ((tmpState == eStateDrug) || (tmpState == eStateEx) || (tmpState == eStateVoid));
+        }
+        ////// DEBUG:
+        // if(proc) { cellsAdjoining++; }
+        //  dum++;
+        /////////
+        break;
+      default:
+        proc = 0;
+        break;
+    }
+    
+    if(proc) { 	
+      // find neighbors-with-polymer count
+      u8 np = 0;
+      for(u8 nb=0; nb<NUM_NEIGHBORS; nb++) {
+        if ( cells[cells[i]->neighborIdx[nb]]->state == eStatePoly ) {
+          np++;
+        }
+      }
+			
+      // don't need to process if cell is trapped by polymer
+      if (np > 5) {
+        if(cells[i]->state == eStateDrug) {
+          trappedDrugMass += 1.0;
+        }
+        continue;
+      }
+			
+      cellsToProcess[numCellsToProcess] = cells[i]->idx;
+      numCellsToProcess++;
+			
+      cells[i]->diffMul = diffNMul[np];
+      cells[i]->dissSteps = (u32)((f64)dissNSteps[np] * dissratescale);
+      cells[i]->dissInc = 1.0 / (f64)(cells[i]->dissSteps);
+			
+      // set dissolution probability depending on cell type
+      if(cells[i]->state == eStateDrug) {
+        cells[i]->dissProb = dissProbDrug;
+      }
+      if(cells[i]->state == eStateEx) {
+        cells[i]->dissProb = dissProbEx;
+      }
+      if(cells[i]->state == eStateVoid) {
+        cells[i]->dissProb = 1.0;
+      }
+    }
+  }
 }
