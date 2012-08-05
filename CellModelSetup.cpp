@@ -295,14 +295,26 @@ void CellModel::distribute(void) {
   
   // iterate over index vectors and fill 2x2x2 blocks
   vector<u32>::iterator it;
-  for(it=polyIdx.begin(); it != polyIdx.end(); it++) {
-    this->setBlockState(*it, eStatePoly);
-  }
-  for(it=drugIdx.begin(); it != drugIdx.end(); it++) {
+  if (this->compressFlag) {
+    for(it=polyIdx.begin(); it != polyIdx.end(); it++) {
+      this->setBlockState(*it, eStatePoly);
+    }
+    for(it=drugIdx.begin(); it != drugIdx.end(); it++) {
     this->setBlockState(*it, eStateDrug);
-  }
-  for(it=exIdx.begin(); it != exIdx.end(); it++) {
-    this->setBlockState(*it, eStateEx);
+    }
+    for(it=exIdx.begin(); it != exIdx.end(); it++) {
+      this->setBlockState(*it, eStateEx);
+    }
+  } else {
+  for(it=polyIdx.begin(); it != polyIdx.end(); it++) {
+      this->setCellState(*it, eStatePoly);
+    }
+    for(it=drugIdx.begin(); it != drugIdx.end(); it++) {
+    this->setCellState(*it, eStateDrug);
+    }
+    for(it=exIdx.begin(); it != exIdx.end(); it++) {
+      this->setCellState(*it, eStateEx);
+    }
   }
 }
 
@@ -551,4 +563,4 @@ void CellModel::findCellsToProcess(void) {
       }
     }
   }
-}
+} 
